@@ -1,0 +1,2627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bitácora — Centro de Estética (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FFFFFF;
+    --bg-alt: #EFE7D8;
+    --ink: #2B2420;
+    --ink-soft: #6B6156;
+    --primary: #1A1A1A;
+    --primary-soft: #333333;
+    --accent: #D9A6A6;
+    --accent-deep: #B97C7C;
+    --gold: #C9A66B;
+    --line: #E1D6C0;
+    --white: #FFFDF9;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+  }
+  .app{
+    max-width:1080px;
+    margin:0 auto;
+    padding:32px 20px 60px;
+  }
+  .header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .header h1{
+    font-size:30px;
+    color:var(--primary);
+    margin:0;
+  }
+  .header .eyebrow{
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--accent-deep);
+    display:block;
+    margin-bottom:4px;
+  }
+  .layout{
+    display:flex;
+    align-items:flex-start;
+    gap:28px;
+  }
+  .main{
+    flex:1;
+    min-width:0;
+  }
+  .tabs{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    background:var(--bg-alt);
+    padding:10px;
+    border-radius:var(--radius);
+    width:210px;
+    flex-shrink:0;
+    position:sticky;
+    top:20px;
+  }
+  .tab{
+    border:none;
+    background:transparent;
+    padding:10px 14px;
+    border-radius:10px;
+    font-family:'Work Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease;
+    white-space:nowrap;
+    text-align:left;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    width:100%;
+  }
+  .tab.active{
+    background:var(--primary);
+    color:var(--white);
+  }
+  .card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-size:19px;
+    margin:0 0 16px;
+    color:var(--primary);
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:600px){ .grid{grid-template-columns:1fr;} }
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:500;
+  }
+  input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    font-family:'Work Sans', sans-serif;
+    font-size:14px;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  textarea{ resize:vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible{
+    outline:2px solid var(--accent-deep);
+    outline-offset:1px;
+  }
+  .birthday-banner{
+    background:linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:18px;
+  }
+  .birthday-banner h2{ color:var(--white); margin:0 0 4px; }
+  .birthday-banner .sub{ font-size:12.5px; color:var(--white); opacity:0.9; margin-bottom:14px; }
+  .birthday-entry{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:rgba(255,255,255,0.22);
+    border-radius:10px;
+    padding:12px 16px;
+    margin-bottom:8px;
+  }
+  .birthday-entry:last-child{ margin-bottom:0; }
+  .birthday-entry .name{ font-family:'Fraunces', serif; font-size:16px; font-weight:500; color:var(--white); }
+  .birthday-entry .cake{ font-size:20px; margin-right:10px; }
+  .btn-birthday{
+    background:var(--white);
+    color:var(--accent-deep);
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+    white-space:nowrap;
+  }
+  .btn-birthday:active{ transform:scale(0.98); }
+  .birthday-alert-entry{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .birthday-alert-entry:last-child{ border-bottom:none; }
+  .birthday-alert-entry .name{ font-weight:600; }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--white);
+    border-radius:var(--radius);
+    padding:22px;
+    max-width:440px;
+    width:100%;
+    max-height:85vh;
+    overflow:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  }
+  .modal-box h2{ margin-top:0; }
+  .modal-box textarea{ min-height:160px; }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:16px;
+  }
+  .field{margin-bottom:0;}
+  .field-hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    min-height:14px;
+  }
+  .row-actions{
+    display:flex;
+    gap:8px;
+    margin-top:6px;
+  }
+  .btn{
+    border:none;
+    border-radius:9px;
+    padding:11px 18px;
+    font-family:'Work Sans', sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{ background:var(--primary); color:var(--white); }
+  .btn-primary:hover{ background:var(--primary-soft); }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn-ghost:hover{ background:var(--bg-alt); }
+  .btn-danger{ background:transparent; color:var(--accent-deep); font-size:12px; padding:6px 10px; }
+  .addnew{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+  }
+  .addnew input{ font-size:13px; padding:8px 10px; }
+  .addnew button{
+    padding:8px 12px;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .full{ grid-column: 1 / -1; }
+  .entry{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 0;
+    border-top:1px solid var(--line);
+  }
+  .entry:first-child{ border-top:none; }
+  .entry-main{ display:flex; gap:14px; align-items:center; }
+  .entry-date{
+    font-family:'Fraunces', serif;
+    font-size:15px;
+    color:var(--primary);
+    min-width:78px;
+  }
+  .entry-date span{
+    display:block;
+    font-size:11px;
+    color:var(--ink-soft);
+    font-family:'Work Sans', sans-serif;
+    margin-top:1px;
+  }
+  .entry-info b{ font-weight:600; }
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:999px;
+    background:var(--bg-alt);
+    color:var(--ink-soft);
+    margin-left:6px;
+  }
+  .empty{
+    text-align:center;
+    padding:36px 10px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .empty .display{
+    font-size:18px;
+    color:var(--primary);
+    margin-bottom:6px;
+  }
+  .filters{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .filters select{ width:auto; min-width:150px; }
+  .filters input[type="date"]{ width:auto; min-width:150px; }
+  .filters .btn-ghost{ padding:10px 14px; }
+  .employee-card{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:18px 0;
+    border-top:1px solid var(--line);
+  }
+  .employee-card:first-child{ border-top:none; }
+  .bloom{ width:64px; height:64px; flex-shrink:0; position:relative; }
+  .petal{
+    position:absolute;
+    left:50%; top:50%;
+    width:14px; height:26px;
+    background:var(--accent);
+    border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+    transform-origin:50% 100%;
+  }
+  .bloom-center{
+    position:absolute; left:50%; top:50%;
+    width:16px; height:16px;
+    background:var(--gold);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    z-index:2;
+  }
+  .emp-name{ font-weight:600; font-size:15px; margin-bottom:2px; }
+  .emp-stats{ font-size:13px; color:var(--ink-soft); }
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--primary);
+    color:var(--white);
+    padding:11px 22px;
+    border-radius:999px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .loading{ text-align:center; padding:40px; color:var(--ink-soft); font-size:14px; }
+  .detail-list{ margin-top:10px; padding-left:0; list-style:none; }
+  .detail-list li{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    padding:5px 0;
+    border-top:1px dashed var(--line);
+  }
+  .detail-list li:first-child{ border-top:none; }
+  .summary-row{
+    display:flex;
+    gap:22px;
+    margin-bottom:6px;
+  }
+  .summary-row .stat{ text-align:left; }
+  .summary-row .stat b{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    color:var(--primary);
+  }
+  .summary-row .stat span{ font-size:11px; color:var(--ink-soft); }
+  .cal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .cal-header .month-label{
+    font-size:18px;
+    color:var(--primary);
+  }
+  .cal-nav{ display:flex; gap:8px; }
+  .cal-nav button{
+    border:1px solid var(--line);
+    background:var(--white);
+    border-radius:8px;
+    width:34px; height:34px;
+    font-size:15px;
+    cursor:pointer;
+    color:var(--primary);
+  }
+  .cal-nav button:hover{ background:var(--bg-alt); }
+  .cal-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+    margin-bottom:6px;
+  }
+  .cal-weekdays span{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .cal-day{
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:8px 6px;
+    min-height:62px;
+    cursor:pointer;
+    background:var(--white);
+    transition:border-color .15s ease;
+  }
+  .cal-day.closed{ opacity:0.4; cursor:default; }
+  .cal-day.empty{ visibility:hidden; }
+  .cal-day.selected{ border-color:var(--primary); border-width:2px; }
+  .cal-day .num{
+    font-family:'Fraunces', serif;
+    color:var(--primary);
+    font-size:14px;
+  }
+  .cal-day .status{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:5px;
+    line-height:1.3;
+  }
+  .slot-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:14px;
+  }
+  .slot-block{
+    padding:10px 13px;
+    border-radius:9px;
+    font-size:13px;
+    border:1px solid var(--line);
+    background:var(--bg);
+  }
+  .slot-block.empty{
+    background:var(--bg-alt);
+  }
+  .slot-block.full{
+    border-style:dashed;
+  }
+  .slot-block-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .slot-block-time{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    color:var(--primary);
+    font-size:14px;
+  }
+  .slot-block-count{
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .slot-block-appt{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px;
+    padding:6px 0 0;
+    color:var(--ink-soft);
+  }
+  .slot-block-appt b{ color:var(--ink); font-weight:600; }
+  .slot-block-add{
+    display:block;
+    width:100%;
+    margin-top:8px;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px dashed var(--accent-deep);
+    background:transparent;
+    color:var(--accent-deep);
+    font-family:'Work Sans', sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:center;
+  }
+  .slot-block-add:hover{ background:var(--bg-alt); }
+  .slot-block.empty .slot-block-add{ margin-top:0; }
+  .tab-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:18px;
+    height:18px;
+    padding:0 5px;
+    margin-left:6px;
+    background:var(--accent-deep);
+    color:var(--white);
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+    vertical-align:middle;
+  }
+
+  /* ===== Responsive: celulares y pantallas chicas ===== */
+  @media (max-width:640px){
+    .app{ padding:20px 14px 50px; }
+    .header{ margin-bottom:22px; }
+    .header h1{ font-size:24px; }
+    .card{ padding:18px; }
+
+    /* en celular, el navegador vuelve a ser horizontal arriba en vez de barra lateral */
+    .layout{ flex-direction:column; gap:0; }
+    .tabs{
+      flex-direction:row;
+      width:100%;
+      gap:6px;
+      padding:5px;
+      border-radius:999px;
+      position:static;
+      margin-bottom:22px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar{ display:none; }
+    .tab{
+      border-radius:999px;
+      flex-shrink:0;
+      width:auto;
+      padding:9px 18px;
+      justify-content:center;
+    }
+
+    /* filas de turnos / servicios / stock / recordatorios: apilar en vez de achicar */
+    .entry{
+      flex-direction:column;
+      align-items:stretch;
+      gap:10px;
+      padding:14px 0;
+    }
+    .entry-main{ width:100%; }
+    .entry > .btn,
+    .entry > div[style*="display:flex"]{
+      align-self:flex-end;
+    }
+
+    /* tarjetas de clientas / profesionales / reportes: apilar */
+    .employee-card{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .employee-card > button{ align-self:flex-end; }
+
+    /* filtros de turnos: uno debajo del otro, ancho completo */
+    .filters{ flex-direction:column; gap:8px; }
+    .filters select{ width:100%; min-width:0; }
+
+    /* inputs con ancho fijo en px definidos desde JS: que ocupen el ancho disponible */
+    input[data-client-phone-for],
+    input[data-phone-for],
+    input[data-price-for],
+    input[data-qty-for],
+    input[data-min-for],
+    input[data-prodprice-for]{
+      width:100% !important;
+    }
+
+    /* fila de agregar clienta/profesional: input arriba, botón abajo */
+    .addnew{ flex-wrap:wrap; }
+    .addnew input{ flex:1 1 100%; }
+    .addnew button{ flex:1 1 100%; }
+
+    /* totales (turnos, comisiones, stock): que se acomoden en varias líneas */
+    .summary-row{ flex-wrap:wrap; gap:16px; row-gap:14px; }
+
+    /* calendario: celdas más chicas para que entren las 7 columnas */
+    .cal-day{ padding:6px 3px; min-height:50px; }
+    .cal-day .num{ font-size:13px; }
+    .cal-day .status{ font-size:9.5px; }
+    .cal-nav button{ width:32px; height:32px; }
+
+    /* turnos libres/ocupados del día: que ocupen bien el ancho */
+    .slot-block-head{ flex-direction:row; }
+  }
+
+  @media (max-width:380px){
+    .header h1{ font-size:21px; }
+    .cal-weekdays span{ font-size:9.5px; }
+    .cal-day .status{ display:none; } /* en pantallas muy chicas, solo el número, sin "libres" */
+  }
+</style>
+<!-- MODO DEMO: sin conexión a Firebase real. Este bloque reemplaza al SDK de Firebase
+     por un motor que simula Firestore 100% en memoria del navegador, precargado con datos
+     de ejemplo. Nada de lo que pase acá se guarda ni se comparte con la base de datos real
+     del negocio: cada visita arranca de cero y se pierde todo al recargar la página. -->
+<script id="mock-firebase-demo">
+"use strict";
+(function(){
+  var STORE = Object.create(null);
+  function clone(o){ return o===undefined ? undefined : JSON.parse(JSON.stringify(o)); }
+
+  function DocRef(path){ this.path = path; this.id = path.split('/').pop(); }
+  DocRef.prototype.get = function(){
+    var data = STORE[this.path];
+    return Promise.resolve({ exists: data !== undefined, id: this.id, data: function(){ return clone(data); } });
+  };
+  DocRef.prototype.set = function(data){ STORE[this.path] = clone(data); return Promise.resolve(); };
+
+  function CollectionRef(path){ this.path = path; }
+  CollectionRef.prototype.doc = function(id){ return new DocRef(this.path + '/' + id); };
+
+  function Firestore(){}
+  Firestore.prototype.collection = function(name){ return new CollectionRef(name); };
+  var dbInstance = new Firestore();
+
+  window.firebase = {
+    initializeApp: function(){ /* modo demo: no se conecta a ningún proyecto real */ },
+    firestore: function(){ return dbInstance; }
+  };
+
+  // ===== Datos de ejemplo (se recrean en cada carga de página) =====
+  var hoy = new Date();
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  var hoyStr = hoy.getFullYear() + '-' + pad(hoy.getMonth()+1) + '-' + pad(hoy.getDate());
+  var cumpleHoy = '1995-' + pad(hoy.getMonth()+1) + '-' + pad(hoy.getDate());
+  var enTresHoras = new Date(hoy.getTime() + 3*60*60*1000);
+  var horaProxima = pad(enTresHoras.getHours()) + ':' + pad(enTresHoras.getMinutes());
+
+  STORE['centro_estetica/employees'] = { value: [
+    { name:'Ana Gómez', phone:'261 555-1111' },
+    { name:'Lucía Fernández', phone:'261 555-2222' }
+  ]};
+  STORE['centro_estetica/services'] = { value: [
+    { name:'Manicura', price:3500 },
+    { name:'Depilación facial', price:2800 },
+    { name:'Masaje descontracturante', price:6000 },
+    { name:'Limpieza de cutis', price:5500 }
+  ]};
+  STORE['centro_estetica/clients'] = { value: [
+    { name:'María Pérez', phone:'261 444-1234', birthday:'1990-05-12' },
+    { name:'Carla Sosa', phone:'261 444-5678', birthday: cumpleHoy },
+    { name:'Julieta Rossi', phone:'261 444-9012', birthday:'1988-11-03' }
+  ]};
+  STORE['centro_estetica/products'] = { value: [
+    { name:'Esmalte semipermanente', qty:2, min:5, price:1800 },
+    { name:'Cera descartable', qty:15, min:5, price:600 },
+    { name:'Crema hidratante', qty:8, min:3, price:2200 }
+  ]};
+  STORE['centro_estetica/appointments'] = { value: [
+    { id:'demo-1', date:hoyStr, time:horaProxima, employee:'Ana Gómez', service:'Manicura', client:'María Pérez', price:3500, pct:'40', notes:'', deposit:'', payment:'', products:[] },
+    { id:'demo-2', date:hoyStr, time:'11:00', employee:'Lucía Fernández', service:'Depilación facial', client:'Carla Sosa', price:2800, pct:'40', notes:'', deposit:'', payment:'Efectivo', products:[] }
+  ]};
+  STORE['centro_estetica/birthdaySettings'] = { value: { template:"¡Feliz cumpleaños, {nombre}! 🎉\n\nTe deseamos un día espectacular. ¡Te esperamos pronto!", discount:'10' } };
+})();
+</script>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading" id="loading">Abriendo la bitácora…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="message-modal-overlay">
+  <div class="modal-box">
+    <h2 id="message-modal-title">Editar mensaje</h2>
+    <textarea id="message-modal-textarea" rows="8"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="message-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="message-modal-send">Enviar por WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="birthday-alert-modal-overlay">
+  <div class="modal-box" style="max-width:480px;">
+    <h2>🎂 Cumpleaños de hoy</h2>
+    <div class="sub" id="birthday-alert-sub" style="font-size:12.5px; color:var(--ink-soft); margin:-8px 0 14px;"></div>
+    <div id="birthday-alert-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="birthday-alert-close">Cerrar</button>
+      <button class="btn btn-primary" id="birthday-alert-goto">Ir a Recordatorios</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="appt-edit-modal-overlay">
+  <div class="modal-box" style="max-width:560px;">
+    <h2>Editar turno</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="e-date">Fecha</label>
+        <input type="date" id="e-date">
+      </div>
+      <div class="field">
+        <label for="e-time">Hora</label>
+        <input type="time" id="e-time">
+      </div>
+      <div class="field">
+        <label for="e-emp">Profesional</label>
+        <input type="text" id="e-emp" list="dl-e-emp" placeholder="Escribí para buscar…" autocomplete="off">
+        <datalist id="dl-e-emp"></datalist>
+      </div>
+      <div class="field">
+        <label for="e-svc">Servicio</label>
+        <input type="text" id="e-svc" list="dl-e-svc" placeholder="Escribí para buscar…" autocomplete="off">
+        <datalist id="dl-e-svc"></datalist>
+      </div>
+      <div class="field">
+        <label for="e-client">Clienta (opcional)</label>
+        <input type="text" id="e-client" list="dl-e-client" placeholder="Escribí para buscar…" autocomplete="off">
+        <datalist id="dl-e-client"></datalist>
+      </div>
+      <div class="field">
+        <label for="e-price">Precio del servicio (opcional)</label>
+        <input type="number" id="e-price" placeholder="0" min="0">
+      </div>
+      <div class="field">
+        <label for="e-pct">% que le corresponde a la profesional</label>
+        <input type="number" id="e-pct" placeholder="50" min="0" max="100">
+      </div>
+      <div class="field">
+        <label for="e-deposit">Seña / adelanto (opcional)</label>
+        <input type="number" id="e-deposit" placeholder="0" min="0">
+      </div>
+      <div class="field">
+        <label for="e-payment">Forma de pago</label>
+        <select id="e-payment">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Tarjeta">Tarjeta</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="e-notes">Notas (opcional)</label>
+        <input type="text" id="e-notes" placeholder="Detalles del turno">
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink-soft); margin:10px 0 0;">Los productos vinculados a este turno no se editan acá — si necesitás cambiarlos, eliminá el turno y cargalo de nuevo.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="appt-edit-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="appt-edit-save">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  // MODO DEMO: no se usa ningún proyecto real (ver mock-firebase-demo más arriba)
+  apiKey: "demo", authDomain: "demo", projectId: "demo"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const dataCollection = db.collection('centro_estetica');
+
+const BUSINESS_NAME = "MT Beauty & Co.";
+const DEFAULT_BIRTHDAY_TEMPLATE = "¡Feliz cumpleaños, {nombre}! 🎉\n\nTe deseamos un día espectacular. ¡Te esperamos pronto!";
+const LOGO_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALIAAAC1CAYAAAD7j6XQAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAC9sSURBVHhe7d0JmBxF2Qfw9fNARTQq4oFH1GBQFKOACIgERIMCElDjAWoICqgEFgXCIRIDqFwuIsgpkUMIBlnlEg9YFDAggQ1HJJDAGiDEgGG4wxHor3/NVtKZ9J7Zne6Z7Xqe95ndmT6r/vXW/z2qqqksfStRFA2LZVQsY5cuXdr8wgsvtMQy9fnnn2+Lpb1TOjqlUiXhe9IWn9faee5k8txzz42Nrzu681ZlKcuqlwDYGKzjY5C1xJ/tzz77bGXBggXRtddeG5177rnRT3/602jixInRuHHjoq222ioaNWpU9O53vzt605veFL3mNa+JXv7yl0f/93//F73kJS+JXvrSl0avfOUro2HDhkVrr712tO6660Yf//jHo+222y6aMGFCdNBBB0UnnXRSdMkll0S333579OSTT0bxPVs7790cg7wEeFl6LoALLM8888zkGLDtDz74YOWaa66JfvnLX0a777579IlPfCJac801E0AC5mDLK17ximjkyJHR2LFjo0MOOSS64IILorlz50ZPPfVUa/ycLSWwy7KsxKAdBbhLlixpv+eeeyrTp0+P9t1332iTTTaJXvva12YCLG9517veFX3hC1+Ijj322GjGjBnRo48+2ho//2Tv0vlaZRkKhSbT8I888kj7P/7xj+hHP/pRom2LCtye5J3vfGf0ta99Lfr1r38d3XvvvZVYY7eUoG7QEgN3eMw5Jz/00EPtf/rTn6K99tores973rOMvzaKoD2f+tSnouOOOy666667Op544okW795ZDWWpx4Lzxo04Oh5626677rrKAQccEK2zzjqZAGhU2WabbaJTTz01WrhwYWsM6vGdVVOWeigA/Pjjj0+ODaMOjbjlllsmHoSshh4qstZaa0V77LFHdNVVV0WLFy9u6ayqshSxAPBjjz3Wcv3111cmTZoUjRgxIrNRh7qgHvh0rKVL2lGkAsCx4dYSa5vKbrvtFr3tbW/LbMBSVpT1118/Ovroo6P777+/pVKplIDOqwDwww8/3PLXv/61sssuuyRBiKwGK6V7MXIdccQRPB4l5ahlAeBYg4y/+uqrK7vuumvC/7IaqJS+yfve975EQ8+fP7+5s6rLMlglNuJG33jjje0/+MEPksBAVoOUsmqy4YYbRmeccUb7ggULxnZWe1kGqsQaeNjdd9/dcsIJJyTcLqsBShlY2X777aOYtk1V953NUJZVKQ899NDoSy+9tGPMmDHRy172ssxKL2VwRL5Hc3Nz5c477yx90P0tNMGsWbOmHnjggSWNyFk+8pGPRGeddVZrR0dHqZ37Umjhiy++uEMwI6tiS8lHdt9998qcOXNK7txToYVnz57dMnny5Iq83qzKLCVf+ehHPxqdf/75pauuqwLEV155Zav821rl/JbSP2GrTJo0qb2kGlVl0aJFoy644IKOj33sY5kVV0oxJVY6lfb29jJlVIk5V/Phhx9eKQ26+pQPfehD0bRp04Z2EOWGG26YbL7aq1/96sxKKqU+5HWve1105JFHTu5s1qFT8OGrrrpq6uc///nMiimlPmXixIltnU3c+AWIL7300tbStdaYsssuu7R3NnXjFiC+6KKLWjfeeOPMSiilMWS77bZrXDAD8QUXXND64Q9/OPPlS2ksiUfc9rg0lnsOiM8///zW9dZbL/OlS2lM2WSTTRoHzAHEH/jABzJftpTGlphG1j/NCHSi1MRDW2LNXL/ejGDYlZy4FLL55pvXJ5gvu+yyltI7UUpaxowZ09oJj/oof/vb35pLP3EpWbLTTjvVR5L+DTfcMH777bevZL1EI4plt2TrWULWjIrVVlstetWrXhWtvvrqycIwa6yxxjLxnd8c41jnyCQbatl+EyZMKHZO8x133DE8fsiGBTHAAV4AK3BaR4MxayFES1RZKdOigt/85jeTdY+/9a1vJWLNjfHjx4t8Jespb7vtttHo0aOT2RcSpqybHEAO4O7VaGvTpaRy8MEHFzNrjnE3ZcqUtkZKAAIkwAUs2lWy/2abbRbJEdl5552j73znO9Fhhx0WnX766dEf//jH6Morr4ys8Hn11VdHMb2K/vKXv0QWTSR//vOfTeaM2trakmN8Xn755dE555wTHXXUUdHee++dgF9HsBrQ+9///uj1r399orkbUWvH9dnRCZ1ilenTp7c0Siom0ADQm9/85miDDTZItOe3v/3tZE3i1tbWBJTAeemll0a///3vo7PPPjtZEPzHP/5xAshvfOMbCSCtRm/S7Kc//enos5/9bLTjjjsm2nrPPfdMVqh3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NGxWg5TSN1lvvfXsTZjQiNIjUcOisl944YWps2bNivbYY49krYisBiqle7Gs7Yknnlh56qmnppY0Isei8gH6lltuSVa4tHpPVoOVsqLYZ++UU04BYDy4NivEl6XnojEA+q677oqmTJmSaJqsBhzqYo/uCy+8sPL000/TwCWAi1xiQDc/+OCD0XnnnZcsKjjUs+tsHNnc3BzdfPPNldiIm1xSiDorAB1L22233ZZseDPUwt62krOwYmzAtamLGMClEVfPpZN2tCxZsqRyzTXXJNstiBY22vprAkZW1bePycKFCyvPP/+8nIiSPjRiiRt2LFDHQ2xl5syZyXYJJsTW6yqidpCy/zbNu3jx4kr8bgn3LbXvECpAHcvkuPHbYw2WbP+1//77R5tttllhgW1THZtH2mdP6P7ZZ581Rw7vLcFblgTUw2JJtDVgP/roo9H1118fnXzyyckGNzZrtKZxrXKlrZ3M82LHqcMOOyy66KKLovnz50dLly5t94zxs44H3s7HL0tZui6dwGYwTo2FvzVatGhRNGPGjGSXJZvfWELXZo62I7MRpV2XLPgd9voIPFwHCNs42J7MHnyyyhhkJuHawV+nsVHOnDlzoqeffhpNANrW+LY07uhYSo1bloEpMZiGx4KS0IhoCZC3AnosHbEAYCX+baUSfusUIE2AGotrGAl4FgC2pAl9Kk1N/w82cRS/qXuUBwAAAABJRU5ErkJggg==";
+const WORK_DAYS = [1,2,3,4,5,6]; // 0=domingo ... 6=sábado. Lunes a sábado.
+const START_HOUR = 9;
+const END_HOUR = 20;
+const FALLBACK_SIMULTANEOUS_SLOTS = 3; // si no hay profesionales cargadas, tope de turnos a la misma hora
+const SLOT_MINUTES = 30; // duración de cada franja, en minutos
+const SLOT_HOURS = [];
+for(let m = START_HOUR * 60; m < END_HOUR * 60; m += SLOT_MINUTES){
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  SLOT_HOURS.push(String(h).padStart(2,'0') + ':' + String(mm).padStart(2,'0'));
+}
+
+const state = {
+  appointments: [],
+  employees: [],
+  services: [],
+  clients: [],
+  products: [],
+  tab: 'registrar',
+  filterEmployee: '',
+  filterService: '',
+  filterDateFrom: '',
+  filterDateTo: '',
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+  calSelectedDate: null,
+  ready: false,
+  registrarProducts: [],
+  reportesTab: 'resumen',
+  filterProductName: '',
+  filterProductEmployee: '',
+  productHistoryLimit: 25,
+  clientSearch: '',
+  birthdaySettings: { template: DEFAULT_BIRTHDAY_TEMPLATE, discount: '' },
+  cajaDate: new Date().toISOString().slice(0,10),
+  reportDate: new Date().toISOString().slice(0,10),
+  reportEmployee: ''
+};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+function openMessagePreview({ title, message, phone }){
+  const overlay = document.getElementById('message-modal-overlay');
+  const textarea = document.getElementById('message-modal-textarea');
+  const titleEl = document.getElementById('message-modal-title');
+  const sendBtn = document.getElementById('message-modal-send');
+  const cancelBtn = document.getElementById('message-modal-cancel');
+
+  titleEl.textContent = title || 'Editar mensaje';
+  textarea.value = message;
+  overlay.classList.add('open');
+
+  const close = ()=> overlay.classList.remove('open');
+
+  cancelBtn.onclick = close;
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+
+  sendBtn.onclick = ()=>{
+    const finalMsg = textarea.value;
+    const url = `https://wa.me/${phone || ''}?text=${encodeURIComponent(finalMsg)}`;
+    window.open(url, '_blank');
+    if(!phone) showToast('Esa clienta no tiene WhatsApp cargado: elegí el contacto manualmente');
+    close();
+  };
+}
+
+function buildBirthdayMessage(name){
+  let body = (state.birthdaySettings.template || DEFAULT_BIRTHDAY_TEMPLATE).replace(/\{nombre\}/g, name);
+  if(state.birthdaySettings.discount){
+    body += `\n\nAdemás, tenés un ${state.birthdaySettings.discount}% de descuento especial en tu próxima visita.`;
+  }
+  return `*${BUSINESS_NAME.toUpperCase()}*\n-----------------------------\n${body}`;
+}
+
+function sendBirthdayGreeting(name){
+  const client = state.clients.find(c=> c.name === name);
+  const phone = client && client.phone ? client.phone : '';
+  openMessagePreview({ title: `Saludo para ${name}`, message: buildBirthdayMessage(name), phone });
+}
+
+function openBirthdayAlertModal(clients){
+  const overlay = document.getElementById('birthday-alert-modal-overlay');
+  const sub = document.getElementById('birthday-alert-sub');
+  const list = document.getElementById('birthday-alert-list');
+  const closeBtn = document.getElementById('birthday-alert-close');
+  const gotoBtn = document.getElementById('birthday-alert-goto');
+
+  sub.textContent = `${clients.length} clienta${clients.length===1?'':'s'} está${clients.length===1?'':'n'} de cumpleaños hoy. Tocá "Enviar saludo" para mandarle la plantilla por WhatsApp.`;
+  list.innerHTML = clients.map(c=>`
+    <div class="birthday-alert-entry">
+      <span class="name">${c.name}</span>
+      <button class="btn btn-primary" data-alert-remind="${c.name}">Enviar saludo</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-alert-remind]').forEach(btn=>{
+    btn.onclick = ()=> sendBirthdayGreeting(btn.dataset.alertRemind);
+  });
+
+  overlay.classList.add('open');
+  const close = ()=> overlay.classList.remove('open');
+  closeBtn.onclick = close;
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+  gotoBtn.onclick = ()=>{
+    close();
+    state.tab = 'recordatorios';
+    render();
+  };
+}
+
+function openApptEditModal(id){
+  const appt = state.appointments.find(a=> a.id === id);
+  if(!appt) return;
+  const overlay = document.getElementById('appt-edit-modal-overlay');
+
+  document.getElementById('dl-e-emp').innerHTML = state.employees.map(e=>`<option value="${e.name}"></option>`).join('');
+  document.getElementById('dl-e-svc').innerHTML = state.services.map(s=>`<option value="${s.name}"></option>`).join('');
+  document.getElementById('dl-e-client').innerHTML = state.clients.map(c=>`<option value="${c.name}"></option>`).join('');
+
+  document.getElementById('e-date').value = appt.date || '';
+  document.getElementById('e-time').value = appt.time || '';
+  document.getElementById('e-emp').value = appt.employee || '';
+  document.getElementById('e-svc').value = appt.service || '';
+  document.getElementById('e-client').value = appt.client || '';
+  document.getElementById('e-price').value = appt.price || '';
+  document.getElementById('e-pct').value = appt.pct || '';
+  document.getElementById('e-deposit').value = appt.deposit || '';
+  document.getElementById('e-payment').value = appt.payment || 'Efectivo';
+  document.getElementById('e-notes').value = appt.notes || '';
+
+  overlay.classList.add('open');
+  const close = ()=> overlay.classList.remove('open');
+  document.getElementById('appt-edit-cancel').onclick = close;
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+
+  document.getElementById('appt-edit-save').onclick = async ()=>{
+    const date = document.getElementById('e-date').value;
+    const time = document.getElementById('e-time').value;
+    const employee = document.getElementById('e-emp').value.trim();
+    const service = document.getElementById('e-svc').value.trim();
+    const client = document.getElementById('e-client').value.trim();
+    const price = document.getElementById('e-price').value;
+    const pct = document.getElementById('e-pct').value;
+    const deposit = document.getElementById('e-deposit').value;
+    const payment = document.getElementById('e-payment').value;
+    const notes = document.getElementById('e-notes').value.trim();
+    if(!date || !time || !employee || !service){
+      showToast('Completá fecha, hora, profesional y servicio');
+      return;
+    }
+    appt.date = date;
+    appt.time = time;
+    appt.employee = employee;
+    appt.service = service;
+    appt.client = client;
+    appt.price = price;
+    appt.pct = pct;
+    appt.deposit = deposit;
+    appt.payment = payment;
+    appt.notes = notes;
+    await saveAppointments();
+    close();
+    render();
+    showToast('Turno actualizado');
+  };
+}
+
+async function loadAll(){
+  try{
+    const doc = await dataCollection.doc('appointments').get();
+    state.appointments = doc.exists ? (doc.data().value || []) : [];
+  }catch(e){ state.appointments = []; showToast('No se pudo conectar con la base de datos.'); }
+  try{
+    const doc = await dataCollection.doc('employees').get();
+    const raw = doc.exists ? (doc.data().value || []) : [];
+    state.employees = raw.map(item => typeof item === 'string' ? { name: item, phone: '' } : item);
+  }catch(e){ state.employees = []; }
+  try{
+    const doc = await dataCollection.doc('services').get();
+    const raw = doc.exists ? (doc.data().value || []) : [];
+    state.services = raw.map(item => typeof item === 'string' ? { name: item, price: '' } : item);
+  }catch(e){ state.services = []; }
+  try{
+    const doc = await dataCollection.doc('clients').get();
+    const raw = doc.exists ? (doc.data().value || []) : [];
+    state.clients = raw.map(item => typeof item === 'string' ? { name: item, phone: '', birthday: '' } : { birthday: '', ...item });
+  }catch(e){ state.clients = []; }
+  try{
+    const doc = await dataCollection.doc('products').get();
+    state.products = doc.exists ? (doc.data().value || []) : [];
+  }catch(e){ state.products = []; }
+  try{
+    const doc = await dataCollection.doc('birthdaySettings').get();
+    const saved = doc.exists ? (doc.data().value || {}) : {};
+    state.birthdaySettings = { template: saved.template || DEFAULT_BIRTHDAY_TEMPLATE, discount: saved.discount || '' };
+  }catch(e){ /* mantiene el valor por defecto */ }
+  state.ready = true;
+  render();
+  const upcoming = getUpcomingCount();
+  const lowStock = getLowStockProducts().length;
+  const birthdaysToday = getTodayBirthdays();
+  const parts = [];
+  if(upcoming > 0) parts.push(`${upcoming} turno${upcoming===1?'':'s'} en las próximas 24hs`);
+  if(lowStock > 0) parts.push(`${lowStock} producto${lowStock===1?'':'s'} con stock bajo`);
+  if(parts.length){
+    showToast('Tenés ' + parts.join(' y '));
+  }
+  if(birthdaysToday.length){
+    openBirthdayAlertModal(birthdaysToday);
+  }
+}
+
+async function saveAppointments(){
+  try{
+    await dataCollection.doc('appointments').set({ value: state.appointments });
+  }catch(e){ showToast('No se pudo guardar. Probá de nuevo.'); }
+}
+async function saveEmployees(){
+  try{ await dataCollection.doc('employees').set({ value: state.employees }); }
+  catch(e){ showToast('No se pudo guardar la profesional.'); }
+}
+async function saveServices(){
+  try{ await dataCollection.doc('services').set({ value: state.services }); }
+  catch(e){ showToast('No se pudo guardar el servicio.'); }
+}
+async function saveClients(){
+  try{ await dataCollection.doc('clients').set({ value: state.clients }); }
+  catch(e){ showToast('No se pudo guardar la clienta.'); }
+}
+async function saveProducts(){
+  try{ await dataCollection.doc('products').set({ value: state.products }); }
+  catch(e){ showToast('No se pudo guardar el producto.'); }
+}
+async function saveBirthdaySettings(){
+  try{ await dataCollection.doc('birthdaySettings').set({ value: state.birthdaySettings }); }
+  catch(e){ showToast('No se pudo guardar la plantilla.'); }
+}
+
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  const dias = ['dom','lun','mar','mié','jue','vie','sáb'];
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return { day: dt.getDate() + ' ' + meses[dt.getMonth()], weekday: dias[dt.getDay()] };
+}
+
+function commissionOf(a){ return (Number(a.price)||0) * (Number(a.pct)||0) / 100; }
+function productsRevenueOf(a){ return (a.products||[]).reduce((s,p)=> s + (Number(p.price)||0) * (Number(p.qty)||0), 0); }
+
+function getUpcomingCount(){
+  const now = new Date();
+  const in24h = new Date(now.getTime() + 24*60*60*1000);
+  return state.appointments.filter(a=>{
+    const dt = new Date(`${a.date}T${a.time}:00`);
+    return dt >= now && dt <= in24h && !a.reminded;
+  }).length;
+}
+
+function getTodayBirthdays(){
+  const now = new Date();
+  const mm = now.getMonth();
+  const dd = now.getDate();
+  return state.clients.filter(c=>{
+    if(!c.birthday) return false;
+    const bd = new Date(c.birthday + 'T00:00:00');
+    return bd.getMonth() === mm && bd.getDate() === dd;
+  });
+}
+
+function getLowStockProducts(){
+  return state.products.filter(p=>{
+    const qty = Number(p.qty)||0;
+    const min = p.min !== undefined && p.min !== '' ? Number(p.min) : 3;
+    return qty <= min;
+  });
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(!state.ready){ app.innerHTML = '<div class="loading">Abriendo la bitácora…</div>'; return; }
+
+  const birthdaysTodayCount = getTodayBirthdays().length;
+  const upcomingCount = getUpcomingCount() + birthdaysTodayCount;
+  const lowStockCount = getLowStockProducts().length;
+
+  app.innerHTML = `
+    <div class="header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img src="${LOGO_SRC}" alt="Logo MT Beauty & Co." style="width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+        <div>
+          <span class="eyebrow">Bitácora de turnos</span>
+          <h1>Centro de Estética</h1>
+        </div>
+      </div>
+    </div>
+    <div class="layout">
+      <div class="tabs">
+        <button class="tab ${state.tab==='registrar'?'active':''}" data-tab="registrar">Registrar</button>
+        <button class="tab ${state.tab==='turnos'?'active':''}" data-tab="turnos">Turnos</button>
+        <button class="tab ${state.tab==='clientes'?'active':''}" data-tab="clientes">Clientes</button>
+        <button class="tab ${state.tab==='servicios'?'active':''}" data-tab="servicios">Servicios</button>
+        <button class="tab ${state.tab==='profesionales'?'active':''}" data-tab="profesionales">Profesionales</button>
+        <button class="tab ${state.tab==='disponibilidad'?'active':''}" data-tab="disponibilidad">Disponibilidad</button>
+        <button class="tab ${state.tab==='recordatorios'?'active':''}" data-tab="recordatorios" style="position:relative;">
+          Recordatorios${birthdaysTodayCount > 0 ? ' 🎂' : ''}
+          ${upcomingCount > 0 ? `<span class="tab-badge">${upcomingCount}</span>` : ''}
+        </button>
+        <button class="tab ${state.tab==='caja'?'active':''}" data-tab="caja">Caja</button>
+        <button class="tab ${state.tab==='reportes'?'active':''}" data-tab="reportes">Reportes</button>
+        <button class="tab ${state.tab==='stock'?'active':''}" data-tab="stock" style="position:relative;">
+          Stock
+          ${lowStockCount > 0 ? `<span class="tab-badge">${lowStockCount}</span>` : ''}
+        </button>
+      </div>
+      <div class="main">
+        <div id="tab-content"></div>
+      </div>
+    </div>
+  `;
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.onclick = ()=>{ state.tab = btn.dataset.tab; render(); };
+  });
+  const content = document.getElementById('tab-content');
+  if(state.tab === 'registrar') content.innerHTML = renderRegistrar();
+  if(state.tab === 'turnos') content.innerHTML = renderTurnos();
+  if(state.tab === 'clientes') content.innerHTML = renderClientes();
+  if(state.tab === 'servicios') content.innerHTML = renderServicios();
+  if(state.tab === 'profesionales') content.innerHTML = renderEmpleadas();
+  if(state.tab === 'disponibilidad') content.innerHTML = renderDisponibilidad();
+  if(state.tab === 'recordatorios') content.innerHTML = renderRecordatorios();
+  if(state.tab === 'caja') content.innerHTML = renderCaja();
+  if(state.tab === 'reportes') content.innerHTML = renderReportes();
+  if(state.tab === 'stock') content.innerHTML = renderStock();
+
+  wireTabEvents();
+}
+
+function renderRegistrar(){
+  const today = new Date().toISOString().slice(0,10);
+  const empOptions = state.employees.map(e=>`<option value="${e.name}"></option>`).join('');
+  const svcOptions = state.services.map(s=>`<option value="${s.name}"></option>`).join('');
+  const clientOptions = state.clients.map(c=>`<option value="${c.name}"></option>`).join('');
+  const prodOptions = state.products.map(p=>`<option value="${p.name}"></option>`).join('');
+  return `
+    <div class="card">
+      <h2>Nuevo turno</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="f-date">Fecha</label>
+          <input type="date" id="f-date" value="${today}">
+        </div>
+        <div class="field">
+          <label for="f-time">Hora</label>
+          <input type="time" id="f-time" value="${new Date().toTimeString().slice(0,5)}">
+        </div>
+        <div class="field">
+          <label for="f-emp">Profesional</label>
+          <input type="text" id="f-emp" list="dl-f-emp" placeholder="Escribí para buscar…" autocomplete="off">
+          <datalist id="dl-f-emp">${empOptions}</datalist>
+        </div>
+        <div class="field">
+          <label for="f-svc">Servicio</label>
+          <input type="text" id="f-svc" list="dl-f-svc" placeholder="Escribí para buscar…" autocomplete="off">
+          <datalist id="dl-f-svc">${svcOptions}</datalist>
+          <div class="field-hint" id="f-svc-hint"></div>
+        </div>
+        <div class="field">
+          <label for="f-client">Clienta (opcional)</label>
+          <input type="text" id="f-client" list="dl-f-client" placeholder="Escribí para buscar…" autocomplete="off">
+          <datalist id="dl-f-client">${clientOptions}</datalist>
+        </div>
+        <div class="field">
+          <label for="f-price">Precio del servicio (opcional)</label>
+          <input type="number" id="f-price" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label for="f-pct">% que le corresponde a la profesional</label>
+          <input type="number" id="f-pct" placeholder="50" min="0" max="100">
+        </div>
+        <div class="field">
+          <label for="f-deposit">Seña / adelanto (opcional)</label>
+          <input type="number" id="f-deposit" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label for="f-payment">Forma de pago</label>
+          <select id="f-payment">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta">Tarjeta</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="f-notes">Notas (opcional)</label>
+          <input type="text" id="f-notes" placeholder="Detalles del turno">
+        </div>
+      </div>
+
+      <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
+        <label style="margin-bottom:8px;">Productos vinculados a la venta (opcional)</label>
+        <div class="addnew" style="margin-top:0;">
+          <div style="flex:2; min-width:180px;">
+            <input type="text" id="f-prod-select" list="dl-f-prod" placeholder="Escribí para buscar un producto…" autocomplete="off">
+            <datalist id="dl-f-prod">${prodOptions}</datalist>
+            <div class="field-hint" id="f-prod-hint"></div>
+          </div>
+          <input type="number" id="f-prod-qty" min="1" value="1" style="width:64px; flex:0 0 64px;">
+          <button class="btn btn-ghost" id="add-prod-to-appt">Agregar</button>
+        </div>
+        <div id="appt-products-list"></div>
+      </div>
+
+      <div class="summary-row" id="appt-total-summary" style="margin-top:16px;"></div>
+
+      <div class="row-actions">
+        <button class="btn btn-primary" id="save-appt">Registrar turno</button>
+      </div>
+    </div>
+  `;
+}
+
+function calcApptTotals(servicePriceVal, depositVal, productsList){
+  const servicePrice = Number(servicePriceVal)||0;
+  const productsTotal = (productsList||[]).reduce((s,p)=> s + (Number(p.price)||0) * (Number(p.qty)||0), 0);
+  const deposit = Number(depositVal)||0;
+  const total = servicePrice + productsTotal;
+  const balance = total - deposit;
+  return { servicePrice, productsTotal, deposit, total, balance };
+}
+
+function updateApptSummary(){
+  const priceEl = document.getElementById('f-price');
+  const depositEl = document.getElementById('f-deposit');
+  const summaryEl = document.getElementById('appt-total-summary');
+  if(!summaryEl || !priceEl || !depositEl) return;
+  const { total, deposit, balance } = calcApptTotals(priceEl.value, depositEl.value, state.registrarProducts);
+  summaryEl.innerHTML = `
+    <div class="stat"><b>$${total.toLocaleString('es-AR')}</b><span>total (servicio + productos)</span></div>
+    ${deposit ? `<div class="stat"><b>$${deposit.toLocaleString('es-AR')}</b><span>seña pagada</span></div>` : ''}
+    <div class="stat"><b>$${balance.toLocaleString('es-AR')}</b><span>saldo al momento del turno</span></div>
+  `;
+}
+
+function renderApptProductsList(){
+  const container = document.getElementById('appt-products-list');
+  if(!container) return;
+  if(state.registrarProducts.length === 0){
+    container.innerHTML = '';
+  }else{
+    container.innerHTML = state.registrarProducts.map((p,idx)=>`
+      <div class="entry" style="padding:8px 0;">
+        <div class="entry-main">
+          <div class="entry-info"><b>${p.name}</b> × ${p.qty}${p.price ? ' — $' + (Number(p.price)*Number(p.qty)).toLocaleString('es-AR') : ''}</div>
+        </div>
+        <button class="btn btn-danger" data-rm-appt-prod="${idx}">Quitar</button>
+      </div>
+    `).join('');
+    container.querySelectorAll('[data-rm-appt-prod]').forEach(btn=>{
+      btn.onclick = ()=>{
+        state.registrarProducts.splice(Number(btn.dataset.rmApptProd), 1);
+        renderApptProductsList();
+      };
+    });
+  }
+  updateApptSummary();
+}
+
+function renderTurnos(){
+  const sorted = [...state.appointments].sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+  const emps = [...new Set(state.appointments.map(a=>a.employee))];
+  const svcs = [...new Set(state.appointments.map(a=>a.service))];
+  const filtered = sorted.filter(a=>
+    (!state.filterEmployee || a.employee === state.filterEmployee) &&
+    (!state.filterService || a.service === state.filterService) &&
+    (!state.filterDateFrom || a.date >= state.filterDateFrom) &&
+    (!state.filterDateTo || a.date <= state.filterDateTo)
+  );
+  const empOpts = emps.map(e=>`<option value="${e}" ${state.filterEmployee===e?'selected':''}>${e}</option>`).join('');
+  const svcOpts = svcs.map(s=>`<option value="${s}" ${state.filterService===s?'selected':''}>${s}</option>`).join('');
+
+  let list = '';
+  if(filtered.length === 0){
+    list = `<div class="empty"><div class="display">Todavía no hay turnos acá</div>Registrá el primero desde la pestaña "Registrar".</div>`;
+  }else{
+    list = filtered.map(a=>{
+      const d = fmtDate(a.date);
+      const { total, deposit, balance, productsTotal } = calcApptTotals(a.price, a.deposit, a.products);
+      const productsLine = (a.products && a.products.length)
+        ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:3px;">Productos: ${a.products.map(p=> p.name + ' ×' + p.qty).join(', ')}</div>`
+        : '';
+      return `
+      <div class="entry">
+        <div class="entry-main">
+          <div class="entry-date">${d.day}<span>${d.weekday} · ${a.time}</span></div>
+          <div class="entry-info">
+            <b>${a.service}</b> con <b>${a.employee}</b>
+            ${a.client ? `<span class="tag">${a.client}</span>` : ''}
+            ${(a.price || productsTotal) ? `<span class="tag">$${total.toLocaleString('es-AR')}</span>` : ''}
+            ${deposit ? `<span class="tag">Seña $${deposit.toLocaleString('es-AR')}</span>` : ''}
+            ${(deposit || productsTotal) && balance > 0 ? `<span class="tag">Saldo $${balance.toLocaleString('es-AR')}</span>` : ''}
+            ${a.payment ? `<span class="tag">${a.payment}</span>` : ''}
+            ${productsLine}
+          </div>
+        </div>
+        <div class="row-actions" style="margin-top:0;">
+          <button class="btn btn-ghost" data-edit="${a.id}">Editar</button>
+          <button class="btn btn-danger" data-del="${a.id}">Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Historial de turnos</h2>
+      <div class="filters">
+        <select id="filter-emp">
+          <option value="">Todas las profesionales</option>
+          ${empOpts}
+        </select>
+        <select id="filter-svc">
+          <option value="">Todos los servicios</option>
+          ${svcOpts}
+        </select>
+        <div>
+          <label style="margin-bottom:2px;">Desde</label>
+          <input type="date" id="filter-date-from" value="${state.filterDateFrom}">
+        </div>
+        <div>
+          <label style="margin-bottom:2px;">Hasta</label>
+          <input type="date" id="filter-date-to" value="${state.filterDateTo}">
+        </div>
+        ${(state.filterEmployee || state.filterService || state.filterDateFrom || state.filterDateTo) ? `<button class="btn btn-ghost" id="clear-turnos-filters" style="align-self:flex-end;">Limpiar filtros</button>` : ''}
+      </div>
+      ${list}
+    </div>
+  `;
+}
+
+function renderClientes(){
+  const byClient = {};
+  const phoneByClient = {};
+  const birthdayByClient = {};
+  state.clients.forEach(c=>{ byClient[c.name] = []; phoneByClient[c.name] = c.phone || ''; birthdayByClient[c.name] = c.birthday || ''; });
+  state.appointments.forEach(a=>{
+    if(!a.client) return;
+    if(!byClient[a.client]) byClient[a.client] = [];
+    byClient[a.client].push(a);
+  });
+
+  const allNames = Object.keys(byClient);
+  const search = (state.clientSearch || '').trim().toLowerCase();
+  const names = search
+    ? allNames.filter(n=> n.toLowerCase().includes(search))
+    : allNames;
+  let cards = '';
+  if(allNames.length === 0){
+    cards = `<div class="empty"><div class="display">Todavía no hay clientas</div>Agregá la primera con el formulario de arriba.</div>`;
+  }else if(names.length === 0){
+    cards = `<div class="empty"><div class="display">Sin resultados</div>No encontramos clientas que coincidan con "${state.clientSearch}".</div>`;
+  }else{
+    cards = names
+      .sort((a,b)=> a.localeCompare(b, 'es', {sensitivity:'base'}))
+      .map(name=>{
+        const list = byClient[name];
+        const sorted = [...list].sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+        const total = list.reduce((s,a)=> s + (Number(a.price)||0), 0);
+        const visitsText = list.length === 0
+          ? 'sin visitas registradas todavía'
+          : `${list.length} visita${list.length===1?'':'s'}${total? ' · $' + total.toLocaleString('es-AR') + ' en total' : ''}`;
+        return `
+          <div class="employee-card">
+            <div class="bloom-center" style="position:static; width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; color:var(--primary); background:var(--bg-alt); border-radius:50%; flex-shrink:0;">${name.charAt(0).toUpperCase()}</div>
+            <div style="flex:1">
+              <input type="text" class="emp-name" value="${name}" data-name-for-client="${name}" style="font-family:'Fraunces',serif; font-size:16px; border:1px solid transparent; padding:2px 4px; margin:-2px -4px 2px; background:transparent; width:auto; max-width:100%;">
+              <div class="emp-stats">${visitsText}</div>
+              ${sorted.length ? `<ul class="detail-list">
+                ${sorted.map(a=>{
+                  const d = fmtDate(a.date);
+                  return `<li>${d.day} — ${a.service} con ${a.employee}</li>`;
+                }).join('')}
+              </ul>` : ''}
+              <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="text" placeholder="WhatsApp (ej: 5491122334455)" value="${phoneByClient[name]||''}" data-client-phone-for="${name}" style="width:190px;">
+                <div>
+                  <label style="margin-bottom:2px;">Cumpleaños</label>
+                  <input type="date" value="${birthdayByClient[name]||''}" data-client-birthday-for="${name}" style="width:150px;">
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-danger" data-del-client="${name}">Eliminar</button>
+          </div>
+        `;
+      }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Agregar clienta</h2>
+      <div class="addnew" style="margin-top:0;">
+        <input type="text" id="new-client-direct" placeholder="Nombre de la clienta">
+        <input type="date" id="new-client-birthday" title="Fecha de nacimiento" style="max-width:150px;">
+        <button class="btn btn-primary" id="add-client-direct">Registrar clienta</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Clientas</h2>
+      ${allNames.length ? `<div class="filters" style="margin-bottom:16px;">
+        <input type="text" id="client-search" placeholder="Buscar clienta por nombre..." value="${state.clientSearch||''}" style="max-width:320px;">
+      </div>` : ''}
+      ${cards}
+    </div>
+  `;
+}
+
+function renderServicios(){
+  const countByService = {};
+  state.appointments.forEach(a=>{ countByService[a.service] = (countByService[a.service]||0) + 1; });
+
+  let list = '';
+  if(state.services.length === 0){
+    list = `<div class="empty"><div class="display">Todavía no hay servicios cargados</div>Agregá el primero con el formulario de arriba.</div>`;
+  }else{
+    list = state.services.map(s=>{
+      const count = countByService[s.name] || 0;
+      return `
+        <div class="entry">
+          <div class="entry-main">
+            <div class="entry-info">
+              <input type="text" value="${s.name}" data-name-for-service="${s.name}" style="width:170px; display:inline-block;">
+              <span class="tag">${count} realizado${count===1?'':'s'}</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="number" min="0" placeholder="Precio" value="${s.price||''}" data-price-for="${s.name}" style="width:110px;">
+            <button class="btn btn-danger" data-del-service="${s.name}">Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Agregar servicio</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="new-service-direct">Nombre del servicio</label>
+          <input type="text" id="new-service-direct" placeholder="ej: Capping">
+        </div>
+        <div class="field">
+          <label for="new-service-price">Precio de referencia (opcional)</label>
+          <input type="number" min="0" id="new-service-price" placeholder="0">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-primary" id="add-service-direct">Registrar servicio</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Servicios ofrecidos</h2>
+      ${list}
+    </div>
+  `;
+}
+
+function renderStock(){
+  const totalValue = state.products.reduce((s,p)=> s + (Number(p.qty)||0) * (Number(p.price)||0), 0);
+  const lowStockProducts = getLowStockProducts();
+  const lowStockCount = lowStockProducts.length;
+
+  let alertBox = '';
+  if(lowStockCount > 0){
+    alertBox = `
+      <div class="card" style="border-color:var(--accent-deep); background:#FBF3F3;">
+        <h2 style="color:var(--accent-deep);">⚠ Stock bajo</h2>
+        <div class="detail-list" style="margin-top:0;">
+          ${lowStockProducts.map(p=> `<li><b>${p.name}</b> — quedan ${Number(p.qty)||0} unidad${(Number(p.qty)||0)===1?'':'es'}</li>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  let list = '';
+  if(state.products.length === 0){
+    list = `<div class="empty"><div class="display">Todavía no hay productos cargados</div>Agregá el primero con el formulario de arriba.</div>`;
+  }else{
+    list = [...state.products].sort((a,b)=> a.name.localeCompare(b.name)).map(p=>{
+      const qty = Number(p.qty)||0;
+      const min = p.min !== undefined && p.min !== '' ? Number(p.min) : 3;
+      const low = qty <= min;
+      return `
+        <div class="entry">
+          <div class="entry-main">
+            <div class="entry-info">
+              <input type="text" value="${p.name}" data-name-for-product="${p.name}" style="width:160px; display:inline-block;">
+              ${low ? `<span class="tag" style="background:var(--accent-deep); color:var(--white);">stock bajo</span>` : ''}
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <label style="margin-bottom:2px;">Cant.</label>
+              <input type="number" min="0" value="${p.qty||0}" data-qty-for="${p.name}" style="width:70px;">
+            </div>
+            <div style="text-align:center;">
+              <label style="margin-bottom:2px;">Mínimo</label>
+              <input type="number" min="0" value="${p.min !== undefined && p.min !== '' ? p.min : 3}" data-min-for="${p.name}" style="width:70px;">
+            </div>
+            <div style="text-align:center;">
+              <label style="margin-bottom:2px;">Precio</label>
+              <input type="number" min="0" placeholder="Precio" value="${p.price||''}" data-prodprice-for="${p.name}" style="width:90px;">
+            </div>
+            <button class="btn btn-danger" data-del-product="${p.name}" style="align-self:flex-end;">Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Agregar producto</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="new-product-name">Nombre del producto</label>
+          <input type="text" id="new-product-name" placeholder="ej: Esmalte semipermanente">
+        </div>
+        <div class="field">
+          <label for="new-product-qty">Cantidad</label>
+          <input type="number" min="0" id="new-product-qty" placeholder="0">
+        </div>
+        <div class="field">
+          <label for="new-product-min">Stock mínimo (alerta)</label>
+          <input type="number" min="0" id="new-product-min" placeholder="3">
+        </div>
+        <div class="field">
+          <label for="new-product-price">Precio unitario (opcional)</label>
+          <input type="number" min="0" id="new-product-price" placeholder="0">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-primary" id="add-product-direct">Registrar producto</button>
+      </div>
+    </div>
+    ${alertBox}
+    <div class="card">
+      <h2>Stock de productos</h2>
+      <div class="summary-row">
+        <div class="stat"><b>${state.products.length}</b><span>producto${state.products.length===1?'':'s'} cargado${state.products.length===1?'':'s'}</span></div>
+        ${totalValue ? `<div class="stat"><b>$${totalValue.toLocaleString('es-AR')}</b><span>valor total en stock</span></div>` : ''}
+        ${lowStockCount ? `<div class="stat"><b>${lowStockCount}</b><span>con stock bajo</span></div>` : ''}
+      </div>
+      ${list}
+    </div>
+  `;
+}
+
+function renderEmpleadas(){
+  const countByEmp = {};
+  state.appointments.forEach(a=>{ countByEmp[a.employee] = (countByEmp[a.employee]||0) + 1; });
+
+  let list = '';
+  if(state.employees.length === 0){
+    list = `<div class="empty"><div class="display">Todavía no hay profesionales cargadas</div>Agregá la primera con el formulario de arriba.</div>`;
+  }else{
+    list = state.employees.map(e=>{
+      const count = countByEmp[e.name] || 0;
+      return `
+        <div class="entry">
+          <div class="entry-main">
+            <div class="entry-info">
+              <input type="text" value="${e.name}" data-name-for-emp="${e.name}" style="width:150px; display:inline-block;">
+              <span class="tag">${count} servicio${count===1?'':'s'}</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" placeholder="WhatsApp (ej: 5491122334455)" value="${e.phone||''}" data-phone-for="${e.name}" style="width:190px;">
+            <button class="btn btn-danger" data-del-emp="${e.name}">Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Agregar profesional</h2>
+      <div class="addnew" style="margin-top:0;">
+        <input type="text" id="new-emp-direct" placeholder="Nombre de la profesional">
+        <button class="btn btn-primary" id="add-emp-direct">Registrar profesional</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Profesionales</h2>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 14px;">Cargá el WhatsApp de cada una con código de país, sin espacios ni guiones (ej: 54911XXXXXXXX), para poder enviarles su informe desde Reportes.</p>
+      ${list}
+    </div>
+  `;
+}
+
+function renderDisponibilidad(){
+  const year = state.calYear;
+  const month = state.calMonth;
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startWeekday = firstDay.getDay();
+
+  // Capacidad de turnos simultáneos por franja: uno por cada profesional cargada
+  // (o un tope fijo si todavía no se cargó ninguna profesional).
+  const slotCapacity = state.employees.length > 0 ? state.employees.length : FALLBACK_SIMULTANEOUS_SLOTS;
+
+  const apptsByDateTime = {};
+  state.appointments.forEach(a=>{
+    const key = a.date + '|' + a.time;
+    if(!apptsByDateTime[key]) apptsByDateTime[key] = [];
+    apptsByDateTime[key].push(a);
+  });
+
+  let cells = '';
+  for(let i=0;i<startWeekday;i++){ cells += `<div class="cal-day empty"></div>`; }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(year, month, d);
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const weekday = dateObj.getDay();
+    const isWorkDay = WORK_DAYS.includes(weekday);
+    const freeCount = SLOT_HOURS.filter(t=>{
+      const n = (apptsByDateTime[dateStr + '|' + t] || []).length;
+      return n < slotCapacity;
+    }).length;
+    const selected = state.calSelectedDate === dateStr ? 'selected' : '';
+    cells += `
+      <div class="cal-day ${isWorkDay?'':'closed'} ${selected}" data-day="${isWorkDay ? dateStr : ''}">
+        <div class="num">${d}</div>
+        <div class="status">${isWorkDay ? freeCount + ' libres' : 'Cerrado'}</div>
+      </div>
+    `;
+  }
+
+  let detail = '';
+  if(state.calSelectedDate){
+    const d = fmtDate(state.calSelectedDate);
+    const blocks = SLOT_HOURS.map(t=>{
+      const appts = apptsByDateTime[state.calSelectedDate + '|' + t] || [];
+      const isFull = appts.length >= slotCapacity;
+      const apptsHtml = appts.map(a=>
+        `<div class="slot-block-appt"><b>${a.employee}</b> · ${a.service}${a.client ? ' — ' + a.client : ''}</div>`
+      ).join('');
+      const addBtn = isFull ? '' : `<button class="slot-block-add" data-slot-date="${state.calSelectedDate}" data-slot-time="${t}">${appts.length ? '+ Agregar otro turno a esta hora' : 'Agregar turno'}</button>`;
+      return `
+        <div class="slot-block ${appts.length ? '' : 'empty'} ${isFull ? 'full' : ''}">
+          <div class="slot-block-head">
+            <span class="slot-block-time">${t}</span>
+            <span class="slot-block-count">${appts.length}/${slotCapacity} ocupados</span>
+          </div>
+          ${apptsHtml}
+          ${addBtn}
+        </div>
+      `;
+    }).join('');
+    detail = `
+      <div class="card">
+        <h2>${d.day} · ${d.weekday}</h2>
+        <p style="font-size:12.5px; color:var(--ink-soft); margin:-8px 0 4px;">Podés cargar hasta ${slotCapacity} turno${slotCapacity===1?'':'s'} en simultáneo por horario${state.employees.length>0 ? ' (uno por profesional)' : ''}.</p>
+        <div class="slot-list">${blocks}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card">
+      <div class="cal-header">
+        <div class="month-label display">${meses[month]} ${year}</div>
+        <div class="cal-nav">
+          <button id="cal-prev">‹</button>
+          <button id="cal-next">›</button>
+        </div>
+      </div>
+      <div class="cal-weekdays">
+        <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+      </div>
+      <div class="cal-grid">${cells}</div>
+    </div>
+    ${detail}
+  `;
+}
+
+function renderRecordatorios(){
+  const now = new Date();
+  const in24h = new Date(now.getTime() + 24*60*60*1000);
+
+  const birthdaysToday = getTodayBirthdays();
+  const birthdayCard = birthdaysToday.length ? `
+    <div class="birthday-banner">
+      <h2>🎂 Cumpleaños de hoy</h2>
+      <div class="sub">${birthdaysToday.length} clienta${birthdaysToday.length===1?'':'s'} está${birthdaysToday.length===1?'':'n'} de cumpleaños hoy</div>
+      ${birthdaysToday.map(c=>`
+        <div class="birthday-entry">
+          <div><span class="cake">🎉</span><span class="name">${c.name}</span></div>
+          <button class="btn-birthday" data-birthday-remind="${c.name}">Enviar saludo</button>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  const settingsCard = `
+    <div class="card">
+      <h2>Plantilla de saludo de cumpleaños</h2>
+      <div class="field full">
+        <label>Mensaje (usá {nombre} para que se reemplace por el nombre de la clienta)</label>
+        <textarea id="birthday-template" rows="4">${state.birthdaySettings.template}</textarea>
+      </div>
+      <div class="grid" style="margin-top:14px;">
+        <div class="field">
+          <label>Descuento de cumpleaños (%, opcional)</label>
+          <input type="number" min="0" max="100" id="birthday-discount" placeholder="Ej: 15" value="${state.birthdaySettings.discount||''}">
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--ink-soft); margin:10px 0 0;">Si cargás un descuento, se agrega automáticamente al final del mensaje.</p>
+      <div class="row-actions">
+        <button class="btn btn-primary" id="save-birthday-settings">Guardar plantilla</button>
+      </div>
+    </div>
+  `;
+
+  const upcoming = state.appointments
+    .map(a=>({ ...a, dt: new Date(`${a.date}T${a.time}:00`) }))
+    .filter(a=> a.dt >= now && a.dt <= in24h && !a.reminded)
+    .sort((a,b)=> a.dt - b.dt);
+
+  if(upcoming.length === 0){
+    return birthdayCard + `<div class="card"><div class="empty"><div class="display">Sin turnos en las próximas 24 horas</div>Acá van a aparecer los turnos que se acercan, para poder avisarle a la clienta a tiempo.</div></div>` + settingsCard;
+  }
+
+  const rows = upcoming.map(a=>{
+    const d = fmtDate(a.date);
+    const client = state.clients.find(c=> c.name === a.client);
+    const phone = client && client.phone ? client.phone : '';
+    return `
+      <div class="entry">
+        <div class="entry-main">
+          <div class="entry-date">${d.day}<span>${d.weekday} · ${a.time}</span></div>
+          <div class="entry-info">
+            <b>${a.service}</b>${a.client ? ` con ${a.client}` : ' (sin clienta asignada)'}
+            <span class="tag">${a.employee}</span>
+          </div>
+        </div>
+        ${a.client ? `<button class="btn btn-ghost" data-remind-id="${a.id}">Enviar recordatorio</button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  return birthdayCard + `
+    <div class="card">
+      <h2>Turnos en las próximas 24 horas</h2>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 14px;">Esta lista se arma cuando abrís la app — no manda avisos solo. Entrá acá y tocá "Enviar recordatorio" para avisarle a cada clienta por WhatsApp.</p>
+      ${rows}
+    </div>
+  ` + settingsCard;
+}
+
+function renderCaja(){
+  const dateVal = state.cajaDate;
+  const dayAppts = state.appointments.filter(a=> a.date === dateVal).sort((a,b)=> a.time.localeCompare(b.time));
+  const d = fmtDate(dateVal);
+
+  const totalServicios = dayAppts.reduce((s,a)=> s + (Number(a.price)||0), 0);
+  const totalProductos = dayAppts.reduce((s,a)=> s + productsRevenueOf(a), 0);
+  const totalFacturado = totalServicios + totalProductos;
+  const totalComisiones = dayAppts.reduce((s,a)=> s + commissionOf(a), 0);
+  const totalSenas = dayAppts.reduce((s,a)=> s + (Number(a.deposit)||0), 0);
+  const neto = totalFacturado - totalComisiones;
+
+  const byPayment = {};
+  dayAppts.forEach(a=>{
+    const { total } = calcApptTotals(a.price, a.deposit, a.products);
+    const method = a.payment || 'Sin especificar';
+    byPayment[method] = (byPayment[method]||0) + total;
+  });
+  const paymentRows = Object.keys(byPayment).length
+    ? Object.entries(byPayment).map(([method, amount])=> `
+      <div class="entry" style="padding:12px 0;">
+        <div class="entry-main"><div class="entry-info"><b>${method}</b></div></div>
+        <div style="font-weight:600;">$${amount.toLocaleString('es-AR')}</div>
+      </div>`).join('')
+    : `<div class="empty">No hay turnos cargados para esta fecha.</div>`;
+
+  let list = '';
+  if(dayAppts.length === 0){
+    list = `<div class="empty"><div class="display">Sin turnos este día</div>Elegí otra fecha o registrá turnos desde "Registrar".</div>`;
+  }else{
+    list = dayAppts.map(a=>{
+      const { total, deposit, productsTotal } = calcApptTotals(a.price, a.deposit, a.products);
+      return `
+      <div class="entry">
+        <div class="entry-main">
+          <div class="entry-date">${a.time}</div>
+          <div class="entry-info">
+            <b>${a.service}</b> con <b>${a.employee}</b>
+            ${a.client ? `<span class="tag">${a.client}</span>` : ''}
+            ${(a.price || productsTotal) ? `<span class="tag">$${total.toLocaleString('es-AR')}</span>` : ''}
+            ${a.payment ? `<span class="tag">${a.payment}</span>` : ''}
+            ${deposit ? `<span class="tag">Seña $${deposit.toLocaleString('es-AR')}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  return `
+    <div class="card">
+      <h2>Cierre de caja</h2>
+      <div class="grid" style="margin-bottom:6px;">
+        <div class="field">
+          <label for="caja-date">Fecha</label>
+          <input type="date" id="caja-date" value="${dateVal}">
+        </div>
+      </div>
+      <div class="field-hint" style="margin-bottom:14px;">El total facturado incluye las señas cargadas en cada turno de este día.</div>
+      <div class="summary-row">
+        <div class="stat"><b>${dayAppts.length}</b><span>turnos del día</span></div>
+        <div class="stat"><b>$${totalFacturado.toLocaleString('es-AR')}</b><span>facturado total</span></div>
+        ${totalSenas ? `<div class="stat"><b>$${totalSenas.toLocaleString('es-AR')}</b><span>en señas incluidas</span></div>` : ''}
+        <div class="stat"><b>$${totalComisiones.toLocaleString('es-AR')}</b><span>comisiones del día</span></div>
+        <div class="stat"><b>$${neto.toLocaleString('es-AR')}</b><span>neto para el local</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Por forma de pago</h2>
+      ${paymentRows}
+    </div>
+
+    <div class="card">
+      <h2>Detalle de turnos — ${d.day} (${d.weekday})</h2>
+      ${list}
+      ${dayAppts.length ? `<div class="row-actions" style="margin-top:16px;">
+        <button class="btn btn-primary" id="whatsapp-caja">Enviar cierre por WhatsApp</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function renderReportes(){
+  if(state.appointments.length === 0){
+    return `<div class="card"><div class="empty"><div class="display">Sin datos todavía</div>Los reportes por profesional van a aparecer cuando registres turnos.</div></div>`;
+  }
+  const subTabs = `
+    <div class="tabs" style="margin-bottom:20px;">
+      <button class="tab ${state.reportesTab==='resumen'?'active':''}" data-report-tab="resumen">Resumen</button>
+      <button class="tab ${state.reportesTab==='profesionales'?'active':''}" data-report-tab="profesionales">Por profesional</button>
+      <button class="tab ${state.reportesTab==='productos'?'active':''}" data-report-tab="productos">Productos</button>
+    </div>
+  `;
+  let body = '';
+  if(state.reportesTab === 'profesionales') body = renderReportesProfesionales();
+  else if(state.reportesTab === 'productos') body = renderReportesProductos();
+  else body = renderReportesResumen();
+  return subTabs + body;
+}
+
+function renderReportesResumen(){
+  const byEmp = {};
+  state.appointments.forEach(a=>{
+    if(!byEmp[a.employee]) byEmp[a.employee] = [];
+    byEmp[a.employee].push(a);
+  });
+  const totalTurnos = state.appointments.length;
+  const totalRevenue = state.appointments.reduce((s,a)=> s + (Number(a.price)||0), 0);
+  const totalProductsRevenue = state.appointments.reduce((s,a)=> s + productsRevenueOf(a), 0);
+  const totalDeposits = state.appointments.reduce((s,a)=> s + (Number(a.deposit)||0), 0);
+  const totalCommissions = state.appointments.reduce((s,a)=> s + commissionOf(a), 0);
+
+  const empNamesAll = [...new Set(state.appointments.map(a=> a.employee))];
+  const empReportOpts = empNamesAll.map(e=> `<option value="${e}" ${state.reportEmployee===e?'selected':''}>${e}</option>`).join('');
+
+  const dayAppts = state.appointments.filter(a=>
+    a.date === state.reportDate &&
+    (!state.reportEmployee || a.employee === state.reportEmployee)
+  ).sort((a,b)=> a.time.localeCompare(b.time));
+  const dayRevenue = dayAppts.reduce((s,a)=> s + (Number(a.price)||0), 0);
+  const dayProductsRevenue = dayAppts.reduce((s,a)=> s + productsRevenueOf(a), 0);
+  const dayCommissions = dayAppts.reduce((s,a)=> s + commissionOf(a), 0);
+  const d = fmtDate(state.reportDate);
+
+  return `
+    <div class="card">
+      <h2>Resumen general</h2>
+      <div class="summary-row">
+        <div class="stat"><b>${totalTurnos}</b><span>turnos totales</span></div>
+        <div class="stat"><b>${Object.keys(byEmp).length}</b><span>profesionales activas</span></div>
+        ${totalRevenue ? `<div class="stat"><b>$${totalRevenue.toLocaleString('es-AR')}</b><span>facturado en servicios</span></div>` : ''}
+        ${totalProductsRevenue ? `<div class="stat"><b>$${totalProductsRevenue.toLocaleString('es-AR')}</b><span>venta de productos</span></div>` : ''}
+        ${totalDeposits ? `<div class="stat"><b>$${totalDeposits.toLocaleString('es-AR')}</b><span>en señas cobradas</span></div>` : ''}
+        ${totalCommissions ? `<div class="stat"><b>$${totalCommissions.toLocaleString('es-AR')}</b><span>en comisiones</span></div>` : ''}
+      </div>
+    </div>
+    <div class="card">
+      <h2>Reporte por día</h2>
+      <div class="filters">
+        <div>
+          <label style="margin-bottom:2px;">Fecha</label>
+          <input type="date" id="report-date" value="${state.reportDate}">
+        </div>
+        <div>
+          <label style="margin-bottom:2px;">Profesional</label>
+          <select id="report-employee">
+            <option value="">Todas las profesionales</option>
+            ${empReportOpts}
+          </select>
+        </div>
+      </div>
+      ${dayAppts.length === 0
+        ? `<div class="empty"><div class="display">Sin turnos ese día</div>No hay turnos registrados para el ${d.day} (${d.weekday})${state.reportEmployee ? ' con '+state.reportEmployee : ''}.</div>`
+        : `
+          <ul class="detail-list">
+            ${dayAppts.map(a=> `<li>${a.time} — ${a.service} con ${a.employee}${a.client ? ' — '+a.client : ''}${a.price ? ' — $'+Number(a.price).toLocaleString('es-AR') : ''}</li>`).join('')}
+          </ul>
+          <div class="summary-row">
+            <div class="stat"><b>${dayAppts.length}</b><span>turnos ese día</span></div>
+            ${dayRevenue ? `<div class="stat"><b>$${dayRevenue.toLocaleString('es-AR')}</b><span>facturado en servicios</span></div>` : ''}
+            ${dayProductsRevenue ? `<div class="stat"><b>$${dayProductsRevenue.toLocaleString('es-AR')}</b><span>venta de productos</span></div>` : ''}
+            ${dayCommissions ? `<div class="stat"><b>$${dayCommissions.toLocaleString('es-AR')}</b><span>en comisiones</span></div>` : ''}
+          </div>
+        `}
+      <div class="row-actions">
+        <button class="btn btn-ghost" id="whatsapp-report-day" ${dayAppts.length===0 ? 'disabled' : ''}>Enviar reporte del día por WhatsApp</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderReportesProfesionales(){
+  const byEmp = {};
+  state.appointments.forEach(a=>{
+    if(!byEmp[a.employee]) byEmp[a.employee] = [];
+    byEmp[a.employee].push(a);
+  });
+
+  const empCards = Object.entries(byEmp)
+    .sort((a,b)=> b[1].length - a[1].length)
+    .map(([name, list])=>{
+      const sortedList = [...list].sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+      return `
+        <div class="employee-card">
+          <img src="${LOGO_SRC}" alt="Logo" style="width:56px; height:56px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+          <div style="flex:1">
+            <div class="emp-name">${name}</div>
+            <ul class="detail-list">
+              ${sortedList.map(a=> `<li>Profesional: ${name} — Servicio: ${a.service} — Dinero correspondiente: $${commissionOf(a).toLocaleString('es-AR')}</li>`).join('')}
+            </ul>
+            <div class="row-actions">
+              <button class="btn btn-ghost" data-whatsapp-emp="${name}">Enviar informe por WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  return `
+    <div class="card">
+      <h2>Por profesional</h2>
+      ${empCards}
+    </div>
+  `;
+}
+
+function renderReportesProductos(){
+  const productSales = [];
+  state.appointments.forEach(a=>{
+    (a.products||[]).forEach(p=>{
+      productSales.push({
+        date: a.date, time: a.time, employee: a.employee, client: a.client, service: a.service,
+        name: p.name, qty: Number(p.qty)||0, price: Number(p.price)||0
+      });
+    });
+  });
+  productSales.sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+
+  if(productSales.length === 0){
+    return `
+      <div class="card">
+        <h2>Venta de productos</h2>
+        <div class="empty"><div class="display">Todavía no se vendieron productos</div>Vinculá un producto del stock al registrar un turno para verlo acá.</div>
+      </div>
+    `;
+  }
+
+  const prodNames = [...new Set(productSales.map(s=> s.name))];
+  const empNames = [...new Set(productSales.map(s=> s.employee))];
+  const prodOpts = prodNames.map(n=> `<option value="${n}" ${state.filterProductName===n?'selected':''}>${n}</option>`).join('');
+  const empOpts = empNames.map(n=> `<option value="${n}" ${state.filterProductEmployee===n?'selected':''}>${n}</option>`).join('');
+
+  const filtered = productSales.filter(s=>
+    (!state.filterProductName || s.name === state.filterProductName) &&
+    (!state.filterProductEmployee || s.employee === state.filterProductEmployee)
+  );
+
+  const totalFiltered = filtered.reduce((s,x)=> s + x.price * x.qty, 0);
+  const limit = state.productHistoryLimit;
+  const visible = filtered.slice(0, limit);
+  const hasMore = filtered.length > limit;
+
+  const rows = visible.map(s=>{
+    const d = fmtDate(s.date);
+    const subtotal = s.price * s.qty;
+    return `
+      <div class="entry">
+        <div class="entry-main">
+          <div class="entry-date">${d.day}<span>${d.weekday} · ${s.time}</span></div>
+          <div class="entry-info">
+            <b>${s.name}</b> × ${s.qty}
+            <span class="tag">${s.employee}</span>
+            ${s.client ? `<span class="tag">${s.client}</span>` : ''}
+            ${s.service ? `<span class="tag">${s.service}</span>` : ''}
+            ${subtotal ? `<span class="tag">$${subtotal.toLocaleString('es-AR')}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <h2>Venta de productos</h2>
+      <div class="filters">
+        <select id="filter-prod-name">
+          <option value="">Todos los productos</option>
+          ${prodOpts}
+        </select>
+        <select id="filter-prod-emp">
+          <option value="">Todas las profesionales</option>
+          ${empOpts}
+        </select>
+      </div>
+      <div class="summary-row" style="margin-bottom:8px;">
+        <div class="stat"><b>${filtered.length}</b><span>venta${filtered.length===1?'':'s'}</span></div>
+        <div class="stat"><b>$${totalFiltered.toLocaleString('es-AR')}</b><span>facturado</span></div>
+      </div>
+      ${filtered.length === 0 ? `<div class="empty">No hay ventas con ese filtro.</div>` : rows}
+      ${hasMore ? `<div class="row-actions" style="justify-content:center; margin-top:14px;">
+        <button class="btn btn-ghost" id="load-more-products">Ver más (quedan ${filtered.length - limit})</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function wireTabEvents(){
+  if(state.tab === 'registrar'){
+    const svcInput = document.getElementById('f-svc');
+    const svcHint = document.getElementById('f-svc-hint');
+    const updateSvcInfo = ()=>{
+      const svc = state.services.find(s=> s.name === svcInput.value.trim());
+      const priceField = document.getElementById('f-price');
+      if(svc){
+        if(svc.price) priceField.value = svc.price;
+        svcHint.textContent = svc.price ? `Precio de lista: $${Number(svc.price).toLocaleString('es-AR')}` : '';
+      }else{
+        svcHint.textContent = '';
+      }
+      updateApptSummary();
+    };
+    svcInput.addEventListener('input', updateSvcInfo);
+    svcInput.addEventListener('change', updateSvcInfo);
+    document.getElementById('f-price').oninput = updateApptSummary;
+    document.getElementById('f-deposit').oninput = updateApptSummary;
+    renderApptProductsList();
+
+    const prodSelect = document.getElementById('f-prod-select');
+    const prodHint = document.getElementById('f-prod-hint');
+    const updateProdInfo = ()=>{
+      const prod = state.products.find(p=> p.name === prodSelect.value.trim());
+      if(prod){
+        const priceTxt = prod.price ? ` — $${Number(prod.price).toLocaleString('es-AR')}` : '';
+        prodHint.textContent = `Stock disponible: ${Number(prod.qty)||0}${priceTxt}`;
+      }else{
+        prodHint.textContent = '';
+      }
+    };
+    prodSelect.addEventListener('input', updateProdInfo);
+    prodSelect.addEventListener('change', updateProdInfo);
+
+    document.getElementById('add-prod-to-appt').onclick = ()=>{
+      const sel = document.getElementById('f-prod-select');
+      const qtyInput = document.getElementById('f-prod-qty');
+      const prod = state.products.find(p=> p.name === sel.value.trim());
+      if(!sel.value.trim() || !prod){
+        showToast('Elegí un producto de la lista');
+        return;
+      }
+      const qty = Math.max(1, Number(qtyInput.value)||1);
+      const stock = Number(prod.qty)||0;
+      const alreadyUsed = state.registrarProducts
+        .filter(p=> p.name === prod.name)
+        .reduce((s,p)=> s + Number(p.qty), 0);
+      if(stock - alreadyUsed < qty){
+        showToast(`Stock insuficiente: quedan ${Math.max(stock - alreadyUsed,0)} unidades de ${prod.name}`);
+        return;
+      }
+      const existing = state.registrarProducts.find(p=> p.name === prod.name);
+      if(existing){ existing.qty = Number(existing.qty) + qty; }
+      else{ state.registrarProducts.push({ name: prod.name, qty, price: prod.price || '' }); }
+      sel.value = '';
+      qtyInput.value = 1;
+      prodHint.textContent = '';
+      renderApptProductsList();
+    };
+
+    document.getElementById('save-appt').onclick = async ()=>{
+      const date = document.getElementById('f-date').value;
+      const time = document.getElementById('f-time').value;
+      const employee = document.getElementById('f-emp').value.trim();
+      const service = document.getElementById('f-svc').value.trim();
+      const client = document.getElementById('f-client').value.trim();
+      const price = document.getElementById('f-price').value;
+      const pct = document.getElementById('f-pct').value;
+      const deposit = document.getElementById('f-deposit').value;
+      const payment = document.getElementById('f-payment').value;
+      const notes = document.getElementById('f-notes').value.trim();
+      if(!date || !time || !employee || !service){
+        showToast('Completá fecha, hora, profesional y servicio');
+        return;
+      }
+      const products = state.registrarProducts.map(p=> ({ name: p.name, qty: Number(p.qty), price: p.price }));
+      state.appointments.push({ id: uid(), date, time, employee, service, client, price, pct, notes, deposit, payment, products });
+      products.forEach(ap=>{
+        const prod = state.products.find(p=> p.name === ap.name);
+        if(prod){ prod.qty = Math.max((Number(prod.qty)||0) - ap.qty, 0); }
+      });
+      await saveAppointments();
+      if(products.length) await saveProducts();
+      state.registrarProducts = [];
+      state.tab = 'turnos';
+      render();
+      showToast('Turno registrado');
+    };
+  }
+  if(state.tab === 'clientes'){
+    const searchInput = document.getElementById('client-search');
+    if(searchInput){
+      searchInput.oninput = ()=>{
+        state.clientSearch = searchInput.value;
+        const cursor = searchInput.selectionStart;
+        render();
+        const restored = document.getElementById('client-search');
+        if(restored){
+          restored.focus();
+          restored.setSelectionRange(cursor, cursor);
+        }
+      };
+    }
+    const addBtn = document.getElementById('add-client-direct');
+    if(addBtn) addBtn.onclick = async ()=>{
+      const input = document.getElementById('new-client-direct');
+      const birthdayInput = document.getElementById('new-client-birthday');
+      const val = input.value.trim();
+      if(!val) return;
+      if(state.clients.some(c=> c.name === val)){
+        showToast('Esa clienta ya está registrada');
+        return;
+      }
+      state.clients.push({ name: val, phone: '', birthday: birthdayInput ? birthdayInput.value : '' });
+      await saveClients();
+      render();
+      showToast('Clienta registrada');
+    };
+    document.querySelectorAll('[data-client-phone-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.clientPhoneFor;
+        let client = state.clients.find(c=> c.name === name);
+        if(!client){
+          client = { name, phone: '', birthday: '' };
+          state.clients.push(client);
+        }
+        client.phone = input.value.replace(/[^0-9]/g,'');
+        input.value = client.phone;
+        await saveClients();
+        showToast('WhatsApp actualizado');
+      };
+    });
+    document.querySelectorAll('[data-client-birthday-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.clientBirthdayFor;
+        let client = state.clients.find(c=> c.name === name);
+        if(!client){
+          client = { name, phone: '', birthday: '' };
+          state.clients.push(client);
+        }
+        client.birthday = input.value;
+        await saveClients();
+        showToast('Fecha de nacimiento actualizada');
+      };
+    });
+    document.querySelectorAll('[data-del-client]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const name = btn.dataset.delClient;
+        state.clients = state.clients.filter(c=> c.name !== name);
+        await saveClients();
+        render();
+        showToast('Clienta eliminada');
+      };
+    });
+    document.querySelectorAll('[data-name-for-client]').forEach(input=>{
+      input.onchange = async ()=>{
+        const oldName = input.dataset.nameForClient;
+        const newName = input.value.trim();
+        if(!newName){ input.value = oldName; return; }
+        if(newName !== oldName && state.clients.some(c=> c.name === newName)){
+          showToast('Ya existe una clienta con ese nombre');
+          input.value = oldName;
+          return;
+        }
+        if(newName === oldName) return;
+        let client = state.clients.find(c=> c.name === oldName);
+        if(!client){
+          client = { name: oldName, phone: '', birthday: '' };
+          state.clients.push(client);
+        }
+        client.name = newName;
+        state.appointments.forEach(a=>{ if(a.client === oldName) a.client = newName; });
+        await saveClients();
+        await saveAppointments();
+        render();
+        showToast('Clienta actualizada');
+      };
+    });
+  }
+  if(state.tab === 'profesionales'){
+    const addBtn = document.getElementById('add-emp-direct');
+    if(addBtn) addBtn.onclick = async ()=>{
+      const input = document.getElementById('new-emp-direct');
+      const val = input.value.trim();
+      if(!val) return;
+      if(state.employees.some(e=> e.name === val)){
+        showToast('Esa profesional ya está registrada');
+        return;
+      }
+      state.employees.push({ name: val, phone: '' });
+      await saveEmployees();
+      render();
+      showToast('Profesional registrada');
+    };
+    document.querySelectorAll('[data-phone-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.phoneFor;
+        const emp = state.employees.find(e=> e.name === name);
+        if(emp){
+          emp.phone = input.value.replace(/[^0-9]/g,'');
+          input.value = emp.phone;
+          await saveEmployees();
+          showToast('WhatsApp actualizado');
+        }
+      };
+    });
+    document.querySelectorAll('[data-del-emp]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const name = btn.dataset.delEmp;
+        state.employees = state.employees.filter(e=> e.name !== name);
+        await saveEmployees();
+        render();
+        showToast('Profesional eliminada');
+      };
+    });
+    document.querySelectorAll('[data-name-for-emp]').forEach(input=>{
+      input.onchange = async ()=>{
+        const oldName = input.dataset.nameForEmp;
+        const newName = input.value.trim();
+        if(!newName){ input.value = oldName; return; }
+        if(newName !== oldName && state.employees.some(e=> e.name === newName)){
+          showToast('Ya existe una profesional con ese nombre');
+          input.value = oldName;
+          return;
+        }
+        if(newName === oldName) return;
+        const emp = state.employees.find(e=> e.name === oldName);
+        if(emp){
+          emp.name = newName;
+          state.appointments.forEach(a=>{ if(a.employee === oldName) a.employee = newName; });
+          await saveEmployees();
+          await saveAppointments();
+          render();
+          showToast('Profesional actualizada');
+        }
+      };
+    });
+  }
+  if(state.tab === 'disponibilidad'){
+    const prevBtn = document.getElementById('cal-prev');
+    const nextBtn = document.getElementById('cal-next');
+    if(prevBtn) prevBtn.onclick = ()=>{
+      state.calMonth--;
+      if(state.calMonth < 0){ state.calMonth = 11; state.calYear--; }
+      state.calSelectedDate = null;
+      render();
+    };
+    if(nextBtn) nextBtn.onclick = ()=>{
+      state.calMonth++;
+      if(state.calMonth > 11){ state.calMonth = 0; state.calYear++; }
+      state.calSelectedDate = null;
+      render();
+    };
+    document.querySelectorAll('[data-day]').forEach(cell=>{
+      cell.onclick = ()=>{
+        const date = cell.dataset.day;
+        if(!date) return;
+        state.calSelectedDate = date;
+        render();
+      };
+    });
+    document.querySelectorAll('[data-slot-date]').forEach(chip=>{
+      chip.onclick = ()=>{
+        const date = chip.dataset.slotDate;
+        const time = chip.dataset.slotTime;
+        state.tab = 'registrar';
+        render();
+        const dateField = document.getElementById('f-date');
+        const timeField = document.getElementById('f-time');
+        if(dateField) dateField.value = date;
+        if(timeField) timeField.value = time;
+        showToast('Turno pre-cargado con esa fecha y hora');
+      };
+    });
+  }
+  if(state.tab === 'servicios'){
+    const addBtn = document.getElementById('add-service-direct');
+    if(addBtn) addBtn.onclick = async ()=>{
+      const nameInput = document.getElementById('new-service-direct');
+      const priceInput = document.getElementById('new-service-price');
+      const val = nameInput.value.trim();
+      if(!val) return;
+      if(state.services.some(s=> s.name === val)){
+        showToast('Ese servicio ya está cargado');
+        return;
+      }
+      state.services.push({ name: val, price: priceInput.value || '' });
+      await saveServices();
+      render();
+      showToast('Servicio registrado');
+    };
+    document.querySelectorAll('[data-price-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.priceFor;
+        const svc = state.services.find(s=> s.name === name);
+        if(svc){
+          svc.price = input.value;
+          await saveServices();
+          showToast('Precio actualizado');
+        }
+      };
+    });
+    document.querySelectorAll('[data-name-for-service]').forEach(input=>{
+      input.onchange = async ()=>{
+        const oldName = input.dataset.nameForService;
+        const newName = input.value.trim();
+        if(!newName){ input.value = oldName; return; }
+        if(newName !== oldName && state.services.some(s=> s.name === newName)){
+          showToast('Ya existe un servicio con ese nombre');
+          input.value = oldName;
+          return;
+        }
+        if(newName === oldName) return;
+        const svc = state.services.find(s=> s.name === oldName);
+        if(svc){
+          svc.name = newName;
+          state.appointments.forEach(a=>{ if(a.service === oldName) a.service = newName; });
+          await saveServices();
+          await saveAppointments();
+          render();
+          showToast('Servicio actualizado');
+        }
+      };
+    });
+    document.querySelectorAll('[data-del-service]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const name = btn.dataset.delService;
+        state.services = state.services.filter(s=> s.name !== name);
+        await saveServices();
+        render();
+        showToast('Servicio eliminado');
+      };
+    });
+  }
+  if(state.tab === 'turnos'){
+    const fe = document.getElementById('filter-emp');
+    const fs = document.getElementById('filter-svc');
+    if(fe) fe.onchange = ()=>{ state.filterEmployee = fe.value; render(); };
+    if(fs) fs.onchange = ()=>{ state.filterService = fs.value; render(); };
+    const fdf = document.getElementById('filter-date-from');
+    const fdt = document.getElementById('filter-date-to');
+    if(fdf) fdf.onchange = ()=>{ state.filterDateFrom = fdf.value; render(); };
+    if(fdt) fdt.onchange = ()=>{ state.filterDateTo = fdt.value; render(); };
+    const clearBtn = document.getElementById('clear-turnos-filters');
+    if(clearBtn) clearBtn.onclick = ()=>{
+      state.filterEmployee = '';
+      state.filterService = '';
+      state.filterDateFrom = '';
+      state.filterDateTo = '';
+      render();
+    };
+    document.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.onclick = ()=> openApptEditModal(btn.dataset.edit);
+    });
+    document.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.dataset.del;
+        state.appointments = state.appointments.filter(a=> a.id !== id);
+        await saveAppointments();
+        render();
+        showToast('Turno eliminado');
+      };
+    });
+  }
+  if(state.tab === 'recordatorios'){
+    document.querySelectorAll('[data-birthday-remind]').forEach(btn=>{
+      btn.onclick = ()=> sendBirthdayGreeting(btn.dataset.birthdayRemind);
+    });
+    const saveSettingsBtn = document.getElementById('save-birthday-settings');
+    if(saveSettingsBtn) saveSettingsBtn.onclick = async ()=>{
+      const templateInput = document.getElementById('birthday-template');
+      const discountInput = document.getElementById('birthday-discount');
+      state.birthdaySettings = {
+        template: (templateInput.value.trim() || DEFAULT_BIRTHDAY_TEMPLATE),
+        discount: discountInput.value
+      };
+      await saveBirthdaySettings();
+      showToast('Plantilla de cumpleaños guardada');
+    };
+    document.querySelectorAll('[data-remind-id]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const appt = state.appointments.find(a=> a.id === btn.dataset.remindId);
+        if(!appt) return;
+        const client = state.clients.find(c=> c.name === appt.client);
+        const phone = client && client.phone ? client.phone : '';
+        const d = fmtDate(appt.date);
+        const { deposit, balance } = calcApptTotals(appt.price, appt.deposit, appt.products);
+        const paymentLines = `${deposit ? `Seña abonada: $${deposit.toLocaleString('es-AR')}\n` : ''}${balance > 0 ? `Saldo a abonar: $${balance.toLocaleString('es-AR')}\n` : ''}`;
+        const msg = `*${BUSINESS_NAME.toUpperCase()}*\n-----------------------------\nRecordatorio de turno\n-----------------------------\nClienta: ${appt.client}\nServicio: ${appt.service}\nFecha: ${d.day} (${d.weekday})\nHora: ${appt.time} hs\n${paymentLines}-----------------------------\n¡Te esperamos!`;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+        if(!phone) showToast('Esa clienta no tiene WhatsApp cargado: elegí el contacto manualmente');
+        appt.reminded = true;
+        await saveAppointments();
+        render();
+      };
+    });
+  }
+  if(state.tab === 'stock'){
+    const addBtn = document.getElementById('add-product-direct');
+    if(addBtn) addBtn.onclick = async ()=>{
+      const nameInput = document.getElementById('new-product-name');
+      const qtyInput = document.getElementById('new-product-qty');
+      const minInput = document.getElementById('new-product-min');
+      const priceInput = document.getElementById('new-product-price');
+      const val = nameInput.value.trim();
+      if(!val) return;
+      if(state.products.some(p=> p.name === val)){
+        showToast('Ese producto ya está cargado');
+        return;
+      }
+      state.products.push({ name: val, qty: qtyInput.value || 0, min: minInput.value || 3, price: priceInput.value || '' });
+      await saveProducts();
+      render();
+      showToast('Producto registrado');
+    };
+    document.querySelectorAll('[data-qty-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.qtyFor;
+        const prod = state.products.find(p=> p.name === name);
+        if(prod){
+          prod.qty = input.value;
+          await saveProducts();
+          render();
+          showToast('Cantidad actualizada');
+        }
+      };
+    });
+    document.querySelectorAll('[data-min-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.minFor;
+        const prod = state.products.find(p=> p.name === name);
+        if(prod){
+          prod.min = input.value;
+          await saveProducts();
+          render();
+          showToast('Mínimo actualizado');
+        }
+      };
+    });
+    document.querySelectorAll('[data-prodprice-for]').forEach(input=>{
+      input.onchange = async ()=>{
+        const name = input.dataset.prodpriceFor;
+        const prod = state.products.find(p=> p.name === name);
+        if(prod){
+          prod.price = input.value;
+          await saveProducts();
+          showToast('Precio actualizado');
+        }
+      };
+    });
+    document.querySelectorAll('[data-del-product]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const name = btn.dataset.delProduct;
+        state.products = state.products.filter(p=> p.name !== name);
+        await saveProducts();
+        render();
+        showToast('Producto eliminado');
+      };
+    });
+    document.querySelectorAll('[data-name-for-product]').forEach(input=>{
+      input.onchange = async ()=>{
+        const oldName = input.dataset.nameForProduct;
+        const newName = input.value.trim();
+        if(!newName){ input.value = oldName; return; }
+        if(newName !== oldName && state.products.some(p=> p.name === newName)){
+          showToast('Ya existe un producto con ese nombre');
+          input.value = oldName;
+          return;
+        }
+        if(newName === oldName) return;
+        const prod = state.products.find(p=> p.name === oldName);
+        if(prod){
+          prod.name = newName;
+          state.appointments.forEach(a=>{
+            (a.products||[]).forEach(ap=>{ if(ap.name === oldName) ap.name = newName; });
+          });
+          await saveProducts();
+          await saveAppointments();
+          render();
+          showToast('Producto actualizado');
+        }
+      };
+    });
+  }
+  if(state.tab === 'caja'){
+    const dateInput = document.getElementById('caja-date');
+    if(dateInput) dateInput.onchange = ()=>{ state.cajaDate = dateInput.value; render(); };
+    const waBtn = document.getElementById('whatsapp-caja');
+    if(waBtn) waBtn.onclick = ()=>{
+      const dateVal = state.cajaDate;
+      const dayAppts = state.appointments.filter(a=> a.date === dateVal).sort((a,b)=> a.time.localeCompare(b.time));
+      const d = fmtDate(dateVal);
+      const totalServicios = dayAppts.reduce((s,a)=> s + (Number(a.price)||0), 0);
+      const totalProductos = dayAppts.reduce((s,a)=> s + productsRevenueOf(a), 0);
+      const totalFacturado = totalServicios + totalProductos;
+      const totalComisiones = dayAppts.reduce((s,a)=> s + commissionOf(a), 0);
+      const neto = totalFacturado - totalComisiones;
+      const byPayment = {};
+      dayAppts.forEach(a=>{
+        const { total } = calcApptTotals(a.price, a.deposit, a.products);
+        const method = a.payment || 'Sin especificar';
+        byPayment[method] = (byPayment[method]||0) + total;
+      });
+      let msg = `*${BUSINESS_NAME.toUpperCase()}*\n-----------------------------\nCierre de caja\nFecha: ${d.day} (${d.weekday})\n-----------------------------\n`;
+      dayAppts.forEach(a=>{
+        const { total } = calcApptTotals(a.price, a.deposit, a.products);
+        msg += `${a.time} — ${a.service} (${a.employee})${a.client ? ' — '+a.client : ''}: $${total.toLocaleString('es-AR')}${a.payment ? ' — '+a.payment : ''}\n`;
+      });
+      msg += `-----------------------------\n`;
+      Object.entries(byPayment).forEach(([method, amount])=>{
+        msg += `${method}: $${amount.toLocaleString('es-AR')}\n`;
+      });
+      msg += `-----------------------------\nTotal facturado: $${totalFacturado.toLocaleString('es-AR')}\nComisiones: $${totalComisiones.toLocaleString('es-AR')}\nNeto para el local: $${neto.toLocaleString('es-AR')}`;
+      openMessagePreview({ title: `Cierre de caja — ${d.day}`, message: msg, phone: '' });
+    };
+  }
+  if(state.tab === 'reportes'){
+    document.querySelectorAll('[data-report-tab]').forEach(btn=>{
+      btn.onclick = ()=>{
+        state.reportesTab = btn.dataset.reportTab;
+        state.productHistoryLimit = 25;
+        render();
+      };
+    });
+    const fpn = document.getElementById('filter-prod-name');
+    const fpe = document.getElementById('filter-prod-emp');
+    if(fpn) fpn.onchange = ()=>{ state.filterProductName = fpn.value; state.productHistoryLimit = 25; render(); };
+    if(fpe) fpe.onchange = ()=>{ state.filterProductEmployee = fpe.value; state.productHistoryLimit = 25; render(); };
+    const loadMoreBtn = document.getElementById('load-more-products');
+    if(loadMoreBtn) loadMoreBtn.onclick = ()=>{ state.productHistoryLimit += 25; render(); };
+    const reportDateInput = document.getElementById('report-date');
+    if(reportDateInput) reportDateInput.onchange = ()=>{ state.reportDate = reportDateInput.value; render(); };
+    const reportEmployeeInput = document.getElementById('report-employee');
+    if(reportEmployeeInput) reportEmployeeInput.onchange = ()=>{ state.reportEmployee = reportEmployeeInput.value; render(); };
+    const whatsappReportDayBtn = document.getElementById('whatsapp-report-day');
+    if(whatsappReportDayBtn) whatsappReportDayBtn.onclick = ()=>{
+      const dayAppts = state.appointments.filter(a=>
+        a.date === state.reportDate &&
+        (!state.reportEmployee || a.employee === state.reportEmployee)
+      ).sort((a,b)=> a.time.localeCompare(b.time));
+      if(dayAppts.length === 0) return;
+      const d = fmtDate(state.reportDate);
+      const dayRevenue = dayAppts.reduce((s,a)=> s + (Number(a.price)||0), 0);
+      const dayProductsRevenue = dayAppts.reduce((s,a)=> s + productsRevenueOf(a), 0);
+      const dayCommissions = dayAppts.reduce((s,a)=> s + commissionOf(a), 0);
+      const totalFacturado = dayRevenue + dayProductsRevenue;
+
+      let msg = `*${BUSINESS_NAME.toUpperCase()}*\n-----------------------------\nReporte del día\nFecha: ${d.day} (${d.weekday})${state.reportEmployee ? '\nProfesional: '+state.reportEmployee : ''}\n-----------------------------\n`;
+      dayAppts.forEach(a=>{
+        const { total } = calcApptTotals(a.price, a.deposit, a.products);
+        msg += `${a.time} — ${a.service} (${a.employee})${a.client ? ' — '+a.client : ''}: $${total.toLocaleString('es-AR')}\n`;
+      });
+      msg += `-----------------------------\nTurnos: ${dayAppts.length}\nTotal facturado: $${totalFacturado.toLocaleString('es-AR')}\nComisiones: $${dayCommissions.toLocaleString('es-AR')}`;
+
+      openMessagePreview({ title: `Reporte del día — ${d.day}${state.reportEmployee ? ' — '+state.reportEmployee : ''}`, message: msg, phone: '' });
+    };
+    document.querySelectorAll('[data-whatsapp-emp]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const name = btn.dataset.whatsappEmp;
+        const emp = state.employees.find(e=> e.name === name);
+        const list = state.appointments.filter(a=> a.employee === name)
+          .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+        const totalCommission = list.reduce((s,a)=> s + commissionOf(a), 0);
+
+        let msg = `*${BUSINESS_NAME.toUpperCase()}*\n-----------------------------\nInforme de actividad\nProfesional: ${name}\n-----------------------------\n`;
+        list.forEach(a=>{
+          const d = fmtDate(a.date);
+          msg += `Fecha: ${d.day} — Servicio: ${a.service} — Corresponde: $${commissionOf(a).toLocaleString('es-AR')}\n`;
+        });
+        msg += `-----------------------------\nTOTAL: $${totalCommission.toLocaleString('es-AR')}`;
+
+        const phone = emp && emp.phone ? emp.phone : '';
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+        if(!phone) showToast('No tiene WhatsApp cargado: elegí el contacto manualmente al abrir WhatsApp');
+      };
+    });
+  }
+}
+
+loadAll();
+
+// ===== Cartel de MODO DEMO + botón de reinicio (ajeno al resto de la app) =====
+(function(){
+  var bar = document.createElement('div');
+  bar.setAttribute('style', [
+    'position:fixed','left:0','right:0','bottom:0','z-index:99999',
+    'background:#2B2420','color:#fff','font-family:"Work Sans",sans-serif',
+    'display:flex','align-items:center','justify-content:center','gap:12px',
+    'padding:10px 16px','font-size:13px','box-shadow:0 -2px 12px rgba(0,0,0,.15)',
+    'flex-wrap:wrap','text-align:center'
+  ].join(';'));
+  bar.innerHTML =
+    '<span><strong style="color:#D9A6A6">● DEMO</strong> — datos de ejemplo, no conectados a ningún sistema real. Se reinician solos al recargar.</span>' +
+    '<button id="demo-reset-btn" style="background:#B97C7C;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;">Reiniciar demo</button>';
+  document.body.appendChild(bar);
+  document.getElementById('demo-reset-btn').addEventListener('click', function(){ location.reload(); });
+  var spacer = document.createElement('div');
+  spacer.setAttribute('style','height:48px');
+  document.body.appendChild(spacer);
+})();
+</script>
+</body>
+</html>

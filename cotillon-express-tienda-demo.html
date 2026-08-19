@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Cotillón Express — Tienda online (Demo)</title>
+<meta name="theme-color" content="#F5008F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<!-- MODO DEMO: sin conexión a Firebase real. Este bloque reemplaza al SDK de Firebase
+     por un motor que simula Firestore/Auth 100% en memoria del navegador. Nada de lo que
+     pase acá se guarda ni se comparte con la base de datos real del negocio: cada visita
+     arranca de cero con datos de ejemplo (catálogo incluido), y se pierde todo al recargar. -->
+<script id="mock-firebase-demo">
+"use strict";
+(function(){
+  var STORE = Object.create(null);
+  var listeners = [];
+  var notifyScheduled = false;
+  function scheduleNotify(){
+    if(notifyScheduled) return;
+    notifyScheduled = true;
+    setTimeout(function(){
+      notifyScheduled = false;
+      listeners.slice().forEach(function(l){ try{ l(); }catch(e){ console.error(e); } });
+    }, 0);
+  }
+  function genId(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9); }
+  function clone(o){ return o===undefined ? undefined : JSON.parse(JSON.stringify(o)); }
+
+  function DocRef(path){ this.path = path; this.id = path.split('/').pop(); }
+  DocRef.prototype.collection = function(name){ return new CollectionRef(this.path + '/' + name); };
+  function makeDocSnap(path){
+    var data = STORE[path];
+    return { exists: data !== undefined, id: path.split('/').pop(), data: function(){ return clone(data); } };
+  }
+  DocRef.prototype.get = function(){ return Promise.resolve(makeDocSnap(this.path)); };
+  DocRef.prototype.set = function(data, opts){
+    var cur = STORE[this.path];
+    var merge = opts && opts.merge;
+    STORE[this.path] = (merge && cur) ? Object.assign({}, cur, data) : Object.assign({}, data);
+    scheduleNotify();
+    return Promise.resolve();
+  };
+  DocRef.prototype.update = function(data){
+    STORE[this.path] = Object.assign({}, STORE[this.path] || {}, data);
+    scheduleNotify();
+    return Promise.resolve();
+  };
+  DocRef.prototype.delete = function(){ delete STORE[this.path]; scheduleNotify(); return Promise.resolve(); };
+  DocRef.prototype.onSnapshot = function(a, b){
+    var cb = (typeof a === 'function') ? a : b;
+    var self = this;
+    var fn = function(){ cb(makeDocSnap(self.path)); };
+    listeners.push(fn);
+    setTimeout(fn, 0);
+    return function(){ var i = listeners.indexOf(fn); if(i>=0) listeners.splice(i,1); };
+  };
+
+  function CollectionRef(path){ this.path = path; this._orderBy = null; this._limit = null; }
+  CollectionRef.prototype.doc = function(id){ return new DocRef(this.path + '/' + (id || genId())); };
+  CollectionRef.prototype.add = function(data){ var ref = this.doc(); return ref.set(data).then(function(){ return ref; }); };
+  CollectionRef.prototype.orderBy = function(field, dir){
+    var q = new CollectionRef(this.path); q._orderBy = { field:field, dir:dir||'asc' }; q._limit = this._limit; return q;
+  };
+  CollectionRef.prototype.limit = function(n){
+    var q = new CollectionRef(this.path); q._orderBy = this._orderBy; q._limit = n; return q;
+  };
+  CollectionRef.prototype._docs = function(){
+    var prefix = this.path + '/';
+    var out = [];
+    Object.keys(STORE).forEach(function(p){
+      if(p.indexOf(prefix) === 0 && p.slice(prefix.length).indexOf('/') === -1) out.push({ path:p, id:p.slice(prefix.length) });
+    });
+    if(this._orderBy){
+      var f = this._orderBy.field, dir = this._orderBy.dir;
+      out.sort(function(a,b){
+        var av = STORE[a.path][f], bv = STORE[b.path][f];
+        if(av===undefined && bv===undefined) return 0;
+        if(av===undefined) return dir==='desc' ? 1 : -1;
+        if(bv===undefined) return dir==='desc' ? -1 : 1;
+        if(av<bv) return dir==='desc' ? 1 : -1;
+        if(av>bv) return dir==='desc' ? -1 : 1;
+        return 0;
+      });
+    }
+    if(this._limit) out = out.slice(0, this._limit);
+    return out;
+  };
+  function makeQuerySnap(docsMeta){
+    return {
+      docs: docsMeta.map(function(m){ return { id:m.id, data:function(){ return clone(STORE[m.path]); }, metadata:{ hasPendingWrites:false } }; }),
+      forEach: function(fn){ this.docs.forEach(fn); }
+    };
+  }
+  CollectionRef.prototype.get = function(){ return Promise.resolve(makeQuerySnap(this._docs())); };
+  CollectionRef.prototype.onSnapshot = function(a, b){
+    var cb = (typeof a === 'function') ? a : b;
+    var self = this;
+    var fn = function(){ cb(makeQuerySnap(self._docs())); };
+    listeners.push(fn);
+    setTimeout(fn, 0);
+    return function(){ var i = listeners.indexOf(fn); if(i>=0) listeners.splice(i,1); };
+  };
+
+  function Transaction(){}
+  Transaction.prototype.get = function(ref){ return Promise.resolve(makeDocSnap(ref.path)); };
+  Transaction.prototype.set = function(ref, data, opts){
+    var cur = STORE[ref.path]; var merge = opts && opts.merge;
+    STORE[ref.path] = (merge && cur) ? Object.assign({}, cur, data) : Object.assign({}, data);
+    return this;
+  };
+  Transaction.prototype.update = function(ref, data){ STORE[ref.path] = Object.assign({}, STORE[ref.path]||{}, data); return this; };
+  Transaction.prototype.delete = function(ref){ delete STORE[ref.path]; return this; };
+
+  function Firestore(){}
+  Firestore.prototype.collection = function(name){ return new CollectionRef(name); };
+  Firestore.prototype.runTransaction = function(fn){
+    var t = new Transaction();
+    return Promise.resolve().then(function(){ return fn(t); }).then(function(res){ scheduleNotify(); return res; });
+  };
+  var dbInstance = new Firestore();
+
+  function Auth(){}
+  Auth.prototype.onAuthStateChanged = function(cb){
+    setTimeout(function(){ cb({ uid:'demo-visitante', isAnonymous:true }); }, 0);
+    return function(){};
+  };
+  Auth.prototype.signInAnonymously = function(){ return Promise.resolve({ user:{ uid:'demo-visitante' } }); };
+  Auth.prototype.isSignInWithEmailLink = function(){ return false; };
+  Auth.prototype.sendSignInLinkToEmail = function(){ return Promise.resolve(); };
+  Auth.prototype.signInWithEmailLink = function(){ return Promise.reject(new Error('No disponible en modo demo')); };
+  var authInstance = new Auth();
+
+  window.firebase = {
+    initializeApp: function(){ /* modo demo: no se conecta a ningún proyecto real */ },
+    firestore: function(){ return dbInstance; },
+    auth: function(){ return authInstance; }
+  };
+
+  // Datos iniciales de la demo (ficticios, se recrean en cada carga de página)
+  STORE['meta/sucursales'] = { lista: [ { id:'demo', nombre:'Cotillón Express (Demo)' } ] };
+  var PRODUCTOS_DEMO = [
+    { id:'p1', nombre:'Globos metalizados x10', precioVenta:4500, stock:38, activo:true, publicadoWeb:true, descripcionWeb:'Surtido de colores, ideal para ambientar' },
+    { id:'p2', nombre:'Piñata temática', precioVenta:12000, stock:6, activo:true, publicadoWeb:true, descripcionWeb:'Lista para rellenar' },
+    { id:'p3', nombre:'Vasos descartables x25', precioVenta:2800, stock:0, activo:true, publicadoWeb:true, descripcionWeb:'Sin stock por ahora' },
+    { id:'p4', nombre:'Manteles de mesa', precioVenta:1900, stock:22, activo:true, publicadoWeb:true, descripcionWeb:'2x1.5m, varios colores' },
+    { id:'p5', nombre:'Velitas de cumpleaños', precioVenta:1200, stock:50, activo:true, publicadoWeb:true, descripcionWeb:'Caja x12' },
+    { id:'p6', nombre:'Cotillón de mesa surtido', precioVenta:3300, stock:15, activo:true, publicadoWeb:true, descripcionWeb:'Silbatos, matracas y más' }
+  ];
+  PRODUCTOS_DEMO.forEach(function(p){ STORE['negocios/demo/productos/'+p.id] = p; });
+  var COMBOS_DEMO = [
+    { id:'c1', nombre:'Combo Cumple Chico', precio:15000, activo:true, descripcion:'Globos + manteles + velitas', items:[ { productoId:'p1', cantidad:1 }, { productoId:'p4', cantidad:2 }, { productoId:'p5', cantidad:1 } ] },
+    { id:'c2', nombre:'Combo Fiesta Grande', precio:28000, activo:true, descripcion:'Piñata + globos + cotillón de mesa', items:[ { productoId:'p2', cantidad:1 }, { productoId:'p1', cantidad:2 }, { productoId:'p6', cantidad:2 } ] }
+  ];
+  COMBOS_DEMO.forEach(function(c){ STORE['negocios/demo/combos/'+c.id] = c; });
+  STORE['negocios/demo/banners/b1'] = { texto:'🎉 Envíos gratis en compras desde $20.000', activo:true };
+})();
+</script>
+
+<style>
+  :root{
+    --bg: #FFF7EC;
+    --bg-soft: #FFEEDA;
+    --panel: #FFFFFF;
+    --ink: #241536;
+    --ink-soft: #6E5D82;
+    --ink-faint: #A79BB8;
+    --border: #EFE3F6;
+    --primary: #F5008F;
+    --primary-dark: #C2006E;
+    --primary-bg: #FFEAF5;
+    --gold: #FFC23C;
+    --gold-dark: #B87700;
+    --gold-bg: #FFF3D6;
+    --mint: #0FAE9C;
+    --mint-bg: #E1FBF6;
+    --shadow: 0 2px 10px rgba(36,21,54,0.06), 0 14px 34px rgba(36,21,54,0.09);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  #root{ min-height:100vh; }
+  .display{ font-family:'Baloo 2',sans-serif; }
+  button{ font-family:inherit; cursor:pointer; }
+  input,textarea{ font-family:inherit; }
+  ::selection{ background:var(--primary); color:#fff; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+  @keyframes sway{ 0%,100%{ transform:rotate(-2deg); } 50%{ transform:rotate(2deg); } }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes slideUp{ from{ transform:translateY(14px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  @keyframes popIn{ from{ transform:scale(0.94); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  @keyframes slideInRight{ from{ transform:translateX(100%); } to{ transform:translateX(0); } }
+
+  /* --- Guirnalda de banderines (firma visual: cotillón = fiesta) --- */
+  .bunting{ display:flex; justify-content:center; padding:14px 0 0; overflow:hidden; }
+  .bunting-string{ display:flex; align-items:flex-start; border-top:2px dashed rgba(36,21,54,0.25); padding-top:0; max-width:900px; width:100%; }
+  .pennant{
+    width:34px; height:42px; flex-shrink:0; margin:0 3px;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+    animation: sway 3.2s ease-in-out infinite;
+  }
+  .pennant:nth-child(odd){ animation-delay:0.4s; }
+  .pennant:nth-child(3n){ animation-delay:0.9s; }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; }
+
+  button:focus-visible, input:focus-visible, textarea:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+
+var h = React.createElement;
+var useState = React.useState, useEffect = React.useEffect, useMemo = React.useMemo,
+    useRef = React.useRef, Fragment = React.Fragment;
+
+/* ============================================================
+   FIREBASE — mismo proyecto que la app de gestión (Cotillón Express)
+============================================================ */
+var firebaseConfig = {
+  // MODO DEMO: no se usa ningún proyecto real (ver mock-firebase-demo más arriba)
+  apiKey: "demo", authDomain: "demo", projectId: "demo"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+function negRef(negocioId, sub){ return db.collection('negocios').doc(negocioId).collection(sub); }
+function negDoc(negocioId, sub, id){ return db.collection('negocios').doc(negocioId).collection(sub).doc(id); }
+function sucursalesMetaRef(){ return db.collection('meta').doc('sucursales'); }
+
+function snapToArray(snap){
+  var arr = [];
+  snap.forEach(function(doc){ arr.push(Object.assign({ id: doc.id }, doc.data())); });
+  return arr;
+}
+function fmtMoney(n){
+  n = Number(n)||0;
+  return '$' + n.toLocaleString('es-AR', { minimumFractionDigits:0, maximumFractionDigits:2 });
+}
+function nowISO(){ return new Date().toISOString(); }
+
+/* ============================================================
+   ÍCONOS (set mínimo, mismo estilo lineal que la app de gestión)
+============================================================ */
+function Icon(name, size, color){
+  size = size || 18; color = color || 'currentColor';
+  var paths = {
+    cart: 'M6 6h15l-1.5 9h-12z M6 6l-1-3H2 M9 20a1 1 0 100-2 1 1 0 000 2z M18 20a1 1 0 100-2 1 1 0 000 2z',
+    plus: 'M12 5v14 M5 12h14',
+    minus: 'M5 12h14',
+    trash: 'M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13',
+    x: 'M6 6l12 12 M18 6l-12 12',
+    check: 'M5 12l5 5L20 7',
+    party: 'M4 20l3-11 13-5-5 13z M9 9l6 6',
+    phone: 'M4 5c0 8 7 15 15 15l2-4-6-2-2 2c-3-1-6-4-7-7l2-2-2-6z',
+    package: 'M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M12 13v8',
+    search: 'M11 11m-7 0a7 7 0 1014 0 7 7 0 10-14 0 M21 21l-4.3-4.3',
+    info: 'M12 8h.01 M11 12h1v6h1'
+  };
+  return h('svg', { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:color, strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' },
+    h('path', { d: paths[name] || '' })
+  );
+}
+
+/* ============================================================
+   HOOK: negocio activo (sucursal). Lee meta/sucursales — si hay una
+   sola sucursal cargada la usa directo; si hubiera más de una, deja
+   elegir (pensado para el caso de que el negocio abra otro local).
+============================================================ */
+function useNegocio(){
+  var listaS = useState(null); var lista = listaS[0]; var setLista = listaS[1];
+  var negocioIdS = useState(null); var negocioId = negocioIdS[0]; var setNegocioId = negocioIdS[1];
+  var authReadyS = useState(false); var authReady = authReadyS[0]; var setAuthReady = authReadyS[1];
+
+  useEffect(function(){
+    var unsub = auth.onAuthStateChanged(function(u){
+      if(u){ setAuthReady(true); }
+      else{ auth.signInAnonymously().catch(function(){ setAuthReady(true); }); }
+    });
+    return unsub;
+  }, []);
+
+  useEffect(function(){
+    if(!authReady) return;
+    sucursalesMetaRef().get().then(function(snap){
+      var l = (snap.exists && Array.isArray(snap.data().lista)) ? snap.data().lista : [];
+      setLista(l);
+      if(l.length===1) setNegocioId(l[0].id);
+    }).catch(function(){ setLista([]); });
+  }, [authReady]);
+
+  return { lista: lista, negocioId: negocioId, setNegocioId: setNegocioId, authReady: authReady };
+}
+
+/* ============================================================
+   HOOK: catálogo (productos publicados + combos activos + banners vigentes)
+============================================================ */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function useCatalogo(negocioId){
+  var productosS = useState([]); var productos = productosS[0]; var setProductos = productosS[1];
+  var combosS = useState([]); var combos = combosS[0]; var setCombos = combosS[1];
+  var bannersS = useState([]); var banners = bannersS[0]; var setBanners = bannersS[1];
+  var cargandoS = useState(true); var cargando = cargandoS[0]; var setCargando = cargandoS[1];
+
+  useEffect(function(){
+    if(!negocioId) return;
+    setCargando(true);
+    var pending = 3;
+    function done(){ pending--; if(pending<=0) setCargando(false); }
+    var u1 = negRef(negocioId,'productos').onSnapshot(function(snap){ setProductos(snapToArray(snap)); done(); }, done);
+    var u2 = negRef(negocioId,'combos').onSnapshot(function(snap){ setCombos(snapToArray(snap)); done(); }, done);
+    var u3 = negRef(negocioId,'banners').onSnapshot(function(snap){ setBanners(snapToArray(snap)); done(); }, done);
+    return function(){ u1(); u2(); u3(); };
+  }, [negocioId]);
+
+  var productosPublicados = useMemo(function(){
+    return productos.filter(function(p){ return p.activo && p.publicadoWeb; });
+  }, [productos]);
+
+  var combosActivos = useMemo(function(){
+    // Disponibilidad del combo = mínimo entre stock/cantidad-necesaria de cada componente.
+    return combos.filter(function(c){ return c.activo; }).map(function(c){
+      var disponibles = (c.items||[]).reduce(function(min, it){
+        var prod = productos.find(function(p){ return p.id===it.productoId; });
+        var stockProd = prod ? (Number(prod.stock)||0) : 0;
+        var posibles = Math.floor(stockProd / (Number(it.cantidad)||1));
+        return Math.min(min, posibles);
+      }, Infinity);
+      if(disponibles===Infinity) disponibles = 0;
+      return Object.assign({}, c, { disponibles: disponibles });
+    });
+  }, [combos, productos]);
+
+  var bannersVigentes = useMemo(function(){
+    var hoy = todayStr();
+    return banners.filter(function(b){
+      if(!b.activo) return false;
+      if(b.vigenciaDesde && hoy < b.vigenciaDesde) return false;
+      if(b.vigenciaHasta && hoy > b.vigenciaHasta) return false;
+      return true;
+    });
+  }, [banners]);
+
+  return { productos: productos, productosPublicados: productosPublicados, combosActivos: combosActivos, bannersVigentes: bannersVigentes, cargando: cargando };
+}
+
+/* ============================================================
+   GUIRNALDA DE BANDERINES (elemento de firma visual)
+============================================================ */
+function Bunting(){
+  var colores = ['#F5008F','#FFC23C','#0FAE9C','#241536','#F5008F','#FFC23C','#0FAE9C','#241536','#F5008F','#FFC23C','#0FAE9C','#241536','#F5008F','#FFC23C','#0FAE9C','#241536'];
+  return h('div', { className:'bunting' },
+    h('div', { className:'bunting-string' },
+      colores.map(function(c, i){ return h('div', { key:i, className:'pennant', style:{ background:c } }); })
+    )
+  );
+}
+
+/* ============================================================
+   BANNER (carrusel simple de avisos publicitarios)
+============================================================ */
+function BannerCarousel(props){
+  var banners = props.banners;
+  var idxS = useState(0); var idx = idxS[0]; var setIdx = idxS[1];
+  useEffect(function(){
+    if(banners.length<2) return;
+    var t = setInterval(function(){ setIdx(function(i){ return (i+1)%banners.length; }); }, 5000);
+    return function(){ clearInterval(t); };
+  }, [banners.length]);
+  if(banners.length===0) return null;
+  var b = banners[idx % banners.length];
+  return h('div', {
+    style:{
+      maxWidth:900, margin:'18px auto 0', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow)',
+      background: b.imagen ? '#000' : 'linear-gradient(120deg, var(--primary), var(--primary-dark))',
+      color:'#fff', position:'relative', minHeight:96, display:'flex', alignItems:'center', justifyContent:'center',
+      padding:'20px 28px', textAlign:'center'
+    }
+  },
+    b.imagen ? h('img', { src:b.imagen, alt:'', style:{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.55 } }) : null,
+    h('div', { className:'display', style:{ position:'relative', fontSize:19, fontWeight:700, lineHeight:1.3, textShadow:'0 2px 8px rgba(0,0,0,0.35)' } }, b.texto),
+    banners.length>1 ? h('div', { style:{ position:'absolute', bottom:8, left:0, right:0, display:'flex', justifyContent:'center', gap:6 } },
+      banners.map(function(_,i){ return h('span', { key:i, style:{ width:6, height:6, borderRadius:999, background: i===idx ? '#fff' : 'rgba(255,255,255,0.4)' } }); })
+    ) : null
+  );
+}
+
+/* ============================================================
+   TARJETAS DE PRODUCTO Y COMBO
+============================================================ */
+function QtyStepper(props){
+  var value = props.value, max = props.max, onChange = props.onChange;
+  return h('div', { style:{ display:'flex', alignItems:'center', gap:8, background:'var(--bg-soft)', borderRadius:999, padding:4 } },
+    h('button', { type:'button', onClick:function(){ onChange(Math.max(0, value-1)); }, style:{ width:26, height:26, borderRadius:999, border:'none', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 1px 3px rgba(0,0,0,0.12)' } }, Icon('minus',13)),
+    h('span', { style:{ minWidth:20, textAlign:'center', fontWeight:700, fontSize:13.5 } }, value),
+    h('button', { type:'button', disabled: value>=max, onClick:function(){ onChange(Math.min(max, value+1)); }, style:{ width:26, height:26, borderRadius:999, border:'none', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 1px 3px rgba(0,0,0,0.12)', opacity: value>=max?0.4:1 } }, Icon('plus',13))
+  );
+}
+
+function ProductoCard(props){
+  var p = props.producto;
+  var cant = props.cantidadEnCarrito || 0;
+  var sinStock = (Number(p.stock)||0) <= 0;
+  return h('div', { style:{ background:'var(--panel)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow)', opacity: sinStock?0.55:1 } },
+    h('div', { style:{ aspectRatio:'1/1', background:'var(--bg-soft)', display:'flex', alignItems:'center', justifyContent:'center' } },
+      p.imagen ? h('img', { src:p.imagen, alt:p.nombre, style:{ width:'100%', height:'100%', objectFit:'cover' } }) : Icon('package', 34, 'var(--ink-faint)')
+    ),
+    h('div', { style:{ padding:14, display:'flex', flexDirection:'column', flex:1, gap:6 } },
+      h('div', { className:'display', style:{ fontSize:15, fontWeight:700, lineHeight:1.25 } }, p.nombre),
+      p.descripcionWeb ? h('div', { style:{ fontSize:12.5, color:'var(--ink-soft)', lineHeight:1.4, flex:1 } }, p.descripcionWeb) : h('div', { style:{ flex:1 } }),
+      h('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:4 } },
+        h('span', { style:{ fontWeight:800, fontSize:16, color:'var(--primary-dark)' } }, fmtMoney(p.precioVenta)),
+        sinStock ? h('span', { style:{ fontSize:11, fontWeight:800, color:'var(--ink-faint)' } }, 'Sin stock') : null
+      ),
+      !sinStock ? (
+        cant===0 ?
+          h('button', { type:'button', onClick:function(){ props.onAdd(); }, style:{ marginTop:6, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 12px', borderRadius:999, border:'none', background:'var(--primary)', color:'#fff', fontWeight:700, fontSize:13 } }, Icon('plus',14), 'Agregar')
+          : h('div', { style:{ marginTop:6, display:'flex', justifyContent:'center' } }, h(QtyStepper, { value:cant, max:Number(p.stock)||0, onChange:props.onSetCantidad }))
+      ) : null
+    )
+  );
+}
+
+function ComboCard(props){
+  var c = props.combo;
+  var cant = props.cantidadEnCarrito || 0;
+  var sinStock = (c.disponibles||0) <= 0;
+  return h('div', { style:{ background:'var(--panel)', border:'2px solid var(--gold)', borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow)', position:'relative', opacity: sinStock?0.55:1 } },
+    h('div', { style:{ position:'absolute', top:10, left:10, zIndex:1, background:'var(--gold)', color:'var(--ink)', fontSize:10.5, fontWeight:800, padding:'3px 9px', borderRadius:999, display:'flex', alignItems:'center', gap:4 } }, Icon('party',11), 'COMBO'),
+    h('div', { style:{ aspectRatio:'1/1', background:'var(--gold-bg)', display:'flex', alignItems:'center', justifyContent:'center' } },
+      c.imagen ? h('img', { src:c.imagen, alt:c.nombre, style:{ width:'100%', height:'100%', objectFit:'cover' } }) : Icon('party', 34, 'var(--gold-dark)')
+    ),
+    h('div', { style:{ padding:14, display:'flex', flexDirection:'column', flex:1, gap:6 } },
+      h('div', { className:'display', style:{ fontSize:15, fontWeight:700, lineHeight:1.25 } }, c.nombre),
+      c.descripcion ? h('div', { style:{ fontSize:12.5, color:'var(--ink-soft)', lineHeight:1.4, flex:1 } }, c.descripcion) : h('div', { style:{ flex:1 } }),
+      h('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:4 } },
+        h('span', { style:{ fontWeight:800, fontSize:16, color:'var(--primary-dark)' } }, fmtMoney(c.precio)),
+        sinStock ? h('span', { style:{ fontSize:11, fontWeight:800, color:'var(--ink-faint)' } }, 'Sin stock') : null
+      ),
+      !sinStock ? (
+        cant===0 ?
+          h('button', { type:'button', onClick:function(){ props.onAdd(); }, style:{ marginTop:6, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 12px', borderRadius:999, border:'none', background:'var(--primary)', color:'#fff', fontWeight:700, fontSize:13 } }, Icon('plus',14), 'Agregar')
+          : h('div', { style:{ marginTop:6, display:'flex', justifyContent:'center' } }, h(QtyStepper, { value:cant, max:c.disponibles, onChange:props.onSetCantidad }))
+      ) : null
+    )
+  );
+}
+
+/* ============================================================
+   CARRITO (drawer lateral) + FORMULARIO DE RESERVA
+============================================================ */
+function CartDrawer(props){
+  var open = props.open, items = props.items, onClose = props.onClose;
+  var onSetCantidad = props.onSetCantidad, onQuitar = props.onQuitar, onReservar = props.onReservar;
+  var total = items.reduce(function(s,it){ return s + it.subtotal; }, 0);
+
+  return h(Fragment, null,
+    open ? h('div', { onClick:onClose, style:{ position:'fixed', inset:0, background:'rgba(36,21,54,0.4)', zIndex:200, animation:'fadeIn 0.15s ease' } }) : null,
+    h('div', {
+      style:{
+        position:'fixed', top:0, right:0, bottom:0, width:'min(400px,100vw)', background:'var(--panel)', zIndex:201,
+        boxShadow:'-8px 0 30px rgba(0,0,0,0.15)', display:'flex', flexDirection:'column',
+        transform: open ? 'translateX(0)' : 'translateX(105%)', transition:'transform 0.25s ease'
+      }
+    },
+      h('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid var(--border)' } },
+        h('div', { className:'display', style:{ fontSize:17, fontWeight:700, display:'flex', alignItems:'center', gap:8 } }, Icon('cart',18), 'Tu pedido'),
+        h('button', { onClick:onClose, style:{ background:'var(--bg-soft)', border:'none', borderRadius:8, width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center' } }, Icon('x',15))
+      ),
+      h('div', { style:{ flex:1, overflowY:'auto', padding:'8px 20px' } },
+        items.length===0 ? h('div', { style:{ textAlign:'center', color:'var(--ink-faint)', padding:'50px 10px', fontSize:13.5 } }, 'Todavía no agregaste nada.') :
+        items.map(function(it){
+          return h('div', { key: it.tipo+'-'+it.id, style:{ display:'flex', gap:10, padding:'12px 0', borderBottom:'1px solid var(--border)' } },
+            h('div', { style:{ flex:1, minWidth:0 } },
+              it.tipo==='combo' ? h('span', { style:{ fontSize:9.5, fontWeight:800, color:'var(--gold-dark)' } }, 'COMBO — ') : null,
+              h('span', { style:{ fontSize:13.5, fontWeight:600 } }, it.nombre),
+              h('div', { style:{ fontSize:12, color:'var(--ink-soft)', marginTop:2 } }, fmtMoney(it.precioUnit) + ' c/u'),
+              h('div', { style:{ marginTop:6 } }, h(QtyStepper, { value:it.cantidad, max:it.max, onChange:function(v){ onSetCantidad(it, v); } }))
+            ),
+            h('div', { style:{ display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'space-between' } },
+              h('button', { type:'button', onClick:function(){ onQuitar(it); }, style:{ background:'transparent', border:'none', color:'var(--ink-faint)', padding:2 } }, Icon('x',14)),
+              h('div', { style:{ fontWeight:800, fontSize:13.5 } }, fmtMoney(it.subtotal))
+            )
+          );
+        })
+      ),
+      h('div', { style:{ padding:'16px 20px', borderTop:'1px solid var(--border)' } },
+        h('div', { style:{ display:'flex', justifyContent:'space-between', fontSize:15, fontWeight:800, marginBottom:12 } },
+          h('span', null, 'Total'), h('span', null, fmtMoney(total))
+        ),
+        h('div', { style:{ fontSize:11.5, color:'var(--ink-faint)', marginBottom:10, lineHeight:1.4 } }, 'Esto es una reserva: el pago se hace al retirar. Te contactamos para coordinar.'),
+        h('button', {
+          type:'button', disabled: items.length===0, onClick:onReservar,
+          style:{ width:'100%', padding:'13px', borderRadius:999, border:'none', background: items.length===0?'var(--ink-faint)':'var(--primary)', color:'#fff', fontWeight:800, fontSize:14.5 }
+        }, 'Reservar')
+      )
+    )
+  );
+}
+
+function ReservaModal(props){
+  var open = props.open, onClose = props.onClose, onConfirm = props.onConfirm;
+  var nombreS = useState(props.initialNombre||''); var nombre = nombreS[0]; var setNombre = nombreS[1];
+  var telefonoS = useState(props.initialTelefono||''); var telefono = telefonoS[0]; var setTelefono = telefonoS[1];
+  var notasS = useState(''); var notas = notasS[0]; var setNotas = notasS[1];
+  var enviandoS = useState(false); var enviando = enviandoS[0]; var setEnviando = enviandoS[1];
+  var errorS = useState(''); var error = errorS[0]; var setError = errorS[1];
+  var okS = useState(false); var ok = okS[0]; var setOk = okS[1];
+
+  useEffect(function(){ if(open){ setOk(false); setError(''); setNombre(props.initialNombre||''); setTelefono(props.initialTelefono||''); } }, [open]);
+
+  if(!open) return null;
+  var valid = nombre.trim() && telefono.trim().length>=6;
+
+  function submit(e){
+    e.preventDefault();
+    if(!valid || enviando) return;
+    setEnviando(true); setError('');
+    onConfirm({ clienteNombre:nombre.trim(), clienteTelefono:telefono.trim(), notas:notas.trim() })
+      .then(function(){ setEnviando(false); setOk(true); })
+      .catch(function(err){ setEnviando(false); setError(err && err.message ? err.message : 'No se pudo completar la reserva. Probá de nuevo.'); });
+  }
+
+  return h('div', { onMouseDown:function(e){ if(e.target===e.currentTarget) onClose(); }, style:{ position:'fixed', inset:0, background:'rgba(36,21,54,0.45)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16, animation:'fadeIn 0.15s ease' } },
+    h('div', { style:{ background:'var(--panel)', borderRadius:18, width:'100%', maxWidth:420, padding:26, animation:'popIn 0.18s ease' } },
+      ok ? h('div', { style:{ textAlign:'center', padding:'10px 0' } },
+        h('div', { style:{ width:56, height:56, borderRadius:999, background:'var(--mint-bg)', color:'var(--mint)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' } }, Icon('check',26)),
+        h('div', { className:'display', style:{ fontSize:19, fontWeight:700, marginBottom:8 } }, '¡Listo, ' + nombre.split(' ')[0] + '!'),
+        h('div', { style:{ fontSize:13.5, color:'var(--ink-soft)', lineHeight:1.5, marginBottom:20 } }, 'Reservamos tu pedido. Te contactamos al ' + telefono + ' para coordinar el pago y la entrega.'),
+        h('button', { type:'button', onClick:onClose, style:{ width:'100%', padding:'12px', borderRadius:999, border:'none', background:'var(--primary)', color:'#fff', fontWeight:700, fontSize:14 } }, 'Cerrar')
+      ) :
+      h('form', { onSubmit:submit },
+        h('div', { className:'display', style:{ fontSize:19, fontWeight:700, marginBottom:4 } }, 'Confirmá tu reserva'),
+        h('div', { style:{ fontSize:12.5, color:'var(--ink-soft)', marginBottom:18 } }, 'El pago se hace al retirar. Solo necesitamos tus datos para avisarte.'),
+        error ? h('div', { style:{ background:'#FFEDED', color:'#D42020', borderRadius:9, padding:'10px 12px', fontSize:12.5, marginBottom:14 } }, error) : null,
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Nombre y apellido'),
+        h('input', { value:nombre, onChange:function(e){ setNombre(e.target.value); }, placeholder:'Ej: María Gómez', autoFocus:true, style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:14, background:'var(--bg-soft)' } }),
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Teléfono'),
+        h('input', { value:telefono, onChange:function(e){ setTelefono(e.target.value); }, placeholder:'Ej: 261 555-1234', style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:14, background:'var(--bg-soft)' } }),
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Notas (opcional)'),
+        h('textarea', { value:notas, onChange:function(e){ setNotas(e.target.value); }, rows:2, placeholder:'Ej: paso a retirar el sábado', style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:18, background:'var(--bg-soft)', fontFamily:'inherit', resize:'vertical' } }),
+        h('div', { style:{ display:'flex', gap:10 } },
+          h('button', { type:'button', onClick:onClose, style:{ flex:1, padding:'12px', borderRadius:999, border:'1px solid var(--border)', background:'#fff', fontWeight:700, fontSize:13.5 } }, 'Volver'),
+          h('button', { type:'submit', disabled:!valid||enviando, style:{ flex:2, padding:'12px', borderRadius:999, border:'none', background: (!valid||enviando)?'var(--ink-faint)':'var(--primary)', color:'#fff', fontWeight:800, fontSize:13.5 } }, enviando ? 'Reservando...' : 'Confirmar reserva')
+        )
+      )
+    )
+  );
+}
+
+/* ============================================================
+   APP PRINCIPAL
+============================================================ */
+function Tienda(props){
+  var negocioId = props.negocioId;
+  var cat = useCatalogo(negocioId);
+  var tabS = useState('todo'); var tab = tabS[0]; var setTab = tabS[1]; // 'todo' | 'combos' | 'productos'
+  var searchS = useState(''); var search = searchS[0]; var setSearch = searchS[1];
+  var cartS = useState([]); var cart = cartS[0]; var setCart = cartS[1];
+  var cartOpenS = useState(false); var cartOpen = cartOpenS[0]; var setCartOpen = cartOpenS[1];
+  var reservaOpenS = useState(false); var reservaOpen = reservaOpenS[0]; var setReservaOpen = reservaOpenS[1];
+
+  function cantidadEnCarrito(tipo, id){
+    var it = cart.find(function(x){ return x.tipo===tipo && x.id===id; });
+    return it ? it.cantidad : 0;
+  }
+
+  function setCantidadProducto(p, cantidad){
+    setCart(function(prev){
+      var sinEste = prev.filter(function(x){ return !(x.tipo==='producto' && x.id===p.id); });
+      if(cantidad<=0) return sinEste;
+      return sinEste.concat([{ tipo:'producto', id:p.id, nombre:p.nombre, precioUnit:Number(p.precioVenta)||0, cantidad:cantidad, subtotal:Math.round(cantidad*(Number(p.precioVenta)||0)*100)/100, max:Number(p.stock)||0 }]);
+    });
+  }
+  function setCantidadCombo(c, cantidad){
+    setCart(function(prev){
+      var sinEste = prev.filter(function(x){ return !(x.tipo==='combo' && x.id===c.id); });
+      if(cantidad<=0) return sinEste;
+      return sinEste.concat([{ tipo:'combo', id:c.id, nombre:c.nombre, precioUnit:Number(c.precio)||0, cantidad:cantidad, subtotal:Math.round(cantidad*(Number(c.precio)||0)*100)/100, max:c.disponibles, comboItems:c.items }]);
+    });
+  }
+  function actualizarCantidadCarrito(item, v){
+    setCart(function(prev){
+      if(v<=0) return prev.filter(function(x){ return !(x.tipo===item.tipo && x.id===item.id); });
+      return prev.map(function(x){
+        if(x.tipo===item.tipo && x.id===item.id) return Object.assign({}, x, { cantidad:v, subtotal:Math.round(v*x.precioUnit*100)/100 });
+        return x;
+      });
+    });
+  }
+  function quitarDelCarrito(item){
+    setCart(function(prev){ return prev.filter(function(x){ return !(x.tipo===item.tipo && x.id===item.id); }); });
+  }
+
+  // Confirma la reserva: transacción atómica que relee el stock real de cada producto
+  // (sueltos + los que componen cada combo pedido) y descuenta todo junto, o rechaza
+  // entero si algo ya no alcanza (evita vender de más si dos personas reservan a la vez).
+  function confirmarReserva(datosCliente){
+    var itemsReserva = cart.map(function(it){
+      return { tipo:it.tipo, id:it.id, nombre:it.nombre, cantidad:it.cantidad, precioUnit:it.precioUnit, subtotal:it.subtotal };
+    });
+    var total = cart.reduce(function(s,it){ return s+it.subtotal; }, 0);
+    var clienteEmail = (props.datosVisitante && props.datosVisitante.email) || '';
+
+    // Mapa productoId -> cantidad total a descontar (sueltos + expandidos de combos)
+    var necesarios = {};
+    cart.forEach(function(it){
+      if(it.tipo==='producto'){
+        necesarios[it.id] = (necesarios[it.id]||0) + it.cantidad;
+      } else {
+        (it.comboItems||[]).forEach(function(ci){
+          necesarios[ci.productoId] = (necesarios[ci.productoId]||0) + ci.cantidad*it.cantidad;
+        });
+      }
+    });
+    var productoIds = Object.keys(necesarios);
+    if(productoIds.length===0) return Promise.reject(new Error('El carrito está vacío.'));
+
+    return db.runTransaction(function(tx){
+      var refs = productoIds.map(function(id){ return negDoc(negocioId,'productos',id); });
+      return Promise.all(refs.map(function(ref){ return tx.get(ref); })).then(function(snaps){
+        var faltantes = [];
+        snaps.forEach(function(snap, i){
+          var id = productoIds[i];
+          var stockReal = snap.exists ? (Number(snap.data().stock)||0) : 0;
+          if(stockReal < necesarios[id]) faltantes.push(snap.exists ? snap.data().nombre : id);
+        });
+        if(faltantes.length>0){
+          throw new Error('Ya no hay stock suficiente de: ' + faltantes.join(', ') + '. Ajustá las cantidades e intentá de nuevo.');
+        }
+        snaps.forEach(function(snap, i){
+          var id = productoIds[i];
+          var nuevoStock = (Number(snap.data().stock)||0) - necesarios[id];
+          tx.update(negDoc(negocioId,'productos',id), { stock: Math.max(0, nuevoStock) });
+        });
+        var productosDescontados = productoIds.map(function(id, i){
+          return { productoId:id, nombre: snaps[i].exists ? snaps[i].data().nombre : id, cantidad: necesarios[id] };
+        });
+        var reservaRef = negRef(negocioId,'reservasWeb').doc();
+        tx.set(reservaRef, {
+          clienteNombre: datosCliente.clienteNombre,
+          clienteTelefono: datosCliente.clienteTelefono,
+          clienteEmail: clienteEmail,
+          notas: datosCliente.notas || '',
+          items: itemsReserva,
+          productosDescontados: productosDescontados,
+          total: Math.round(total*100)/100,
+          estado: 'pendiente',
+          fecha: nowISO()
+        });
+      });
+    }).then(function(){
+      setCart([]);
+    });
+  }
+
+  var itemsFiltrados = useMemo(function(){
+    var s = search.trim().toLowerCase();
+    var productos = cat.productosPublicados.filter(function(p){ return !s || p.nombre.toLowerCase().indexOf(s)>=0; });
+    var combos = cat.combosActivos.filter(function(c){ return !s || c.nombre.toLowerCase().indexOf(s)>=0; });
+    return { productos:productos, combos:combos };
+  }, [cat.productosPublicados, cat.combosActivos, search]);
+
+  var cantCarrito = cart.reduce(function(s,it){ return s+it.cantidad; }, 0);
+
+  return h('div', { style:{ minHeight:'100vh', display:'flex', flexDirection:'column' } },
+    h(Bunting),
+    h('header', { style:{ textAlign:'center', padding:'6px 20px 10px' } },
+      h('div', { className:'display', style:{ fontSize:32, fontWeight:800, color:'var(--primary)', letterSpacing:'-0.01em' } }, 'Cotillón Express'),
+      h('div', { style:{ fontSize:13.5, color:'var(--ink-soft)', marginTop:2 } }, 'Todo para tu fiesta — reservá online y retirá cuando quieras')
+    ),
+    h(BannerCarousel, { banners:cat.bannersVigentes }),
+    h('div', { style:{ maxWidth:900, margin:'22px auto 0', padding:'0 20px', width:'100%' } },
+      h('div', { style:{ position:'relative', marginBottom:16 } },
+        h('span', { style:{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'var(--ink-faint)' } }, Icon('search',16)),
+        h('input', {
+          value:search, onChange:function(e){ setSearch(e.target.value); }, placeholder:'Buscar productos o combos...',
+          style:{ width:'100%', padding:'12px 14px 12px 40px', borderRadius:999, border:'1px solid var(--border)', fontSize:14, background:'var(--panel)', boxShadow:'var(--shadow)' }
+        })
+      ),
+      h('div', { style:{ display:'flex', gap:8, marginBottom:20 } },
+        [['todo','Todo'],['combos','Combos'],['productos','Productos']].map(function(t){
+          var active = tab===t[0];
+          return h('button', { key:t[0], onClick:function(){ setTab(t[0]); }, style:{ padding:'8px 16px', borderRadius:999, border: active?'none':'1px solid var(--border)', background: active?'var(--ink)':'var(--panel)', color: active?'#fff':'var(--ink-soft)', fontWeight:700, fontSize:13 } }, t[1]);
+        })
+      )
+    ),
+    h('main', { style:{ flex:1, maxWidth:900, margin:'0 auto', padding:'0 20px 100px', width:'100%' } },
+      cat.cargando ? h('div', { style:{ textAlign:'center', padding:'60px 0', color:'var(--ink-faint)' } }, 'Cargando catálogo...') :
+      (itemsFiltrados.productos.length===0 && itemsFiltrados.combos.length===0) ? h('div', { style:{ textAlign:'center', padding:'60px 0', color:'var(--ink-faint)' } }, 'No encontramos nada con esa búsqueda.') :
+      h(Fragment, null,
+        (tab==='todo' || tab==='combos') && itemsFiltrados.combos.length>0 ? h('div', { style:{ marginBottom:28 } },
+          h('div', { className:'display', style:{ fontSize:18, fontWeight:700, marginBottom:12 } }, 'Combos armados'),
+          h('div', { style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(190px,1fr))', gap:14 } },
+            itemsFiltrados.combos.map(function(c){
+              return h(ComboCard, { key:c.id, combo:c, cantidadEnCarrito:cantidadEnCarrito('combo',c.id), onAdd:function(){ setCantidadCombo(c,1); }, onSetCantidad:function(v){ setCantidadCombo(c,v); } });
+            })
+          )
+        ) : null,
+        (tab==='todo' || tab==='productos') && itemsFiltrados.productos.length>0 ? h('div', null,
+          h('div', { className:'display', style:{ fontSize:18, fontWeight:700, marginBottom:12 } }, 'Productos'),
+          h('div', { style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(190px,1fr))', gap:14 } },
+            itemsFiltrados.productos.map(function(p){
+              return h(ProductoCard, { key:p.id, producto:p, cantidadEnCarrito:cantidadEnCarrito('producto',p.id), onAdd:function(){ setCantidadProducto(p,1); }, onSetCantidad:function(v){ setCantidadProducto(p,v); } });
+            })
+          )
+        ) : null
+      )
+    ),
+    cantCarrito>0 ? h('button', {
+      onClick:function(){ setCartOpen(true); },
+      style:{ position:'fixed', right:20, bottom:20, zIndex:150, display:'flex', alignItems:'center', gap:10, padding:'14px 20px', borderRadius:999, border:'none', background:'var(--primary)', color:'#fff', fontWeight:800, fontSize:14, boxShadow:'0 10px 28px rgba(245,0,143,0.35)', animation:'slideUp 0.2s ease' }
+    }, Icon('cart',18), 'Ver pedido (' + cantCarrito + ')') : null,
+    h(CartDrawer, {
+      open:cartOpen, items:cart, onClose:function(){ setCartOpen(false); },
+      onSetCantidad:actualizarCantidadCarrito, onQuitar:quitarDelCarrito,
+      onReservar:function(){ setCartOpen(false); setReservaOpen(true); }
+    }),
+    h(ReservaModal, {
+      open:reservaOpen, onClose:function(){ setReservaOpen(false); },
+      onConfirm: confirmarReserva,
+      initialNombre: props.datosVisitante ? props.datosVisitante.nombre : '',
+      initialTelefono: props.datosVisitante ? props.datosVisitante.telefono : ''
+    }),
+    h('footer', { style:{ textAlign:'center', padding:'20px', fontSize:11.5, color:'var(--ink-faint)' } },
+      'Cotillón Express · Reserva online, el pago se hace al retirar',
+      props.onCambiarDatos ? h('div', { style:{ marginTop:6 } },
+        h('button', { type:'button', onClick:props.onCambiarDatos, style:{ background:'none', border:'none', color:'var(--ink-faint)', fontSize:11, textDecoration:'underline', cursor:'pointer' } }, '¿No sos vos? Cambiar mis datos')
+      ) : null
+    )
+  );
+}
+
+function SeleccionNegocio(props){
+  var lista = props.lista;
+  return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16, padding:20 } },
+    h('div', { className:'display', style:{ fontSize:20, fontWeight:700 } }, 'Elegí tu sucursal'),
+    h('div', { style:{ display:'flex', flexDirection:'column', gap:10, width:'100%', maxWidth:320 } },
+      lista.map(function(s){
+        return h('button', { key:s.id, onClick:function(){ props.onSelect(s.id); }, style:{ padding:'14px 18px', borderRadius:12, border:'1px solid var(--border)', background:'var(--panel)', fontWeight:700, fontSize:14, boxShadow:'var(--shadow)' } }, s.nombre);
+      })
+    )
+  );
+}
+
+/* ============================================================
+   VALIDACIÓN DE DATOS POR EMAIL (gate de entrada): antes de ver el
+   catálogo, el visitante carga nombre, teléfono y email. Se le manda
+   un mail con un link (Firebase Auth "email link sign-in" — gratis,
+   sin servidor propio ni servicio de mail externo) y SOLO al hacer
+   clic en ese link queda confirmado y puede entrar. Una vez confirmado
+   en este navegador, no se le vuelve a pedir (queda en localStorage).
+============================================================ */
+function emailValido(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email||'').trim());
+}
+
+function useEmailGate(negocioId){
+  // estados: 'cargando' | 'necesita_validar' | 'esperando_email' | 'verificando' | 'listo'
+  var estadoS = useState('cargando'); var estado = estadoS[0]; var setEstado = estadoS[1];
+  var datosS = useState(null); var datos = datosS[0]; var setDatos = datosS[1];
+  var errorS = useState(''); var error = errorS[0]; var setError = errorS[1];
+
+  useEffect(function(){
+    if(!negocioId) return;
+    // MODO DEMO: se saltea la verificación por email (que en la tienda real manda un
+    // link de confirmación) y entra directo con un visitante de ejemplo, para que
+    // cualquiera pueda probar el flujo completo de reserva sin trabas.
+    setDatos({ nombre:'Visitante Demo', telefono:'11 5555-0000', email:'demo@ejemplo.com' });
+    setEstado('listo');
+  }, [negocioId]);
+
+  function enviarLink(datosForm){
+    setError('');
+    var actionCodeSettings = {
+      url: window.location.origin + window.location.pathname + '?negocio=' + encodeURIComponent(negocioId),
+      handleCodeInApp: true
+    };
+    return auth.sendSignInLinkToEmail(datosForm.email, actionCodeSettings).then(function(){
+      var pend = { nombre:datosForm.nombre, telefono:datosForm.telefono, email:datosForm.email, negocioId:negocioId };
+      try { localStorage.setItem('tienda_pendiente_verificacion', JSON.stringify(pend)); } catch(e){}
+      setDatos(pend);
+      setEstado('esperando_email');
+    }).catch(function(err){
+      console.error(err);
+      setError('No pudimos enviar el email de confirmación. Revisá la dirección e intentá de nuevo.');
+      throw err;
+    });
+  }
+
+  function reintentar(){
+    try { localStorage.removeItem('tienda_pendiente_verificacion'); } catch(e){}
+    setDatos(null); setError(''); setEstado('necesita_validar');
+  }
+
+  function cambiarDatos(){
+    // MODO DEMO: no hay verificación real por email; simplemente vuelve a mostrar
+    // el mismo visitante de ejemplo (no hay a dónde "cambiar" en la demo).
+    setDatos({ nombre:'Visitante Demo', telefono:'11 5555-0000', email:'demo@ejemplo.com' });
+    setEstado('listo');
+  }
+
+  return { estado:estado, datos:datos, error:error, enviarLink:enviarLink, reintentar:reintentar, cambiarDatos:cambiarDatos };
+}
+
+function ValidacionScreen(props){
+  var nombreS = useState(''); var nombre = nombreS[0]; var setNombre = nombreS[1];
+  var telefonoS = useState(''); var telefono = telefonoS[0]; var setTelefono = telefonoS[1];
+  var emailS = useState(''); var email = emailS[0]; var setEmail = emailS[1];
+  var enviandoS = useState(false); var enviando = enviandoS[0]; var setEnviando = enviandoS[1];
+
+  var valid = nombre.trim() && telefono.trim().length>=6 && emailValido(email);
+
+  function submit(e){
+    e.preventDefault();
+    if(!valid || enviando) return;
+    setEnviando(true);
+    props.onSubmit({ nombre:nombre.trim(), telefono:telefono.trim(), email:email.trim() })
+      .catch(function(){})
+      .then(function(){ setEnviando(false); });
+  }
+
+  return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:20 } },
+    h('div', { style:{ width:'100%', maxWidth:400, background:'var(--panel)', borderRadius:20, padding:'30px 26px', boxShadow:'var(--shadow)', animation:'popIn 0.2s ease' } },
+      h('div', { className:'display', style:{ fontSize:24, fontWeight:800, color:'var(--primary)', textAlign:'center', marginBottom:4 } }, 'Cotillón Express'),
+      h('div', { style:{ fontSize:13, color:'var(--ink-soft)', textAlign:'center', marginBottom:22 } }, 'Antes de entrar, contanos quién sos'),
+      props.error ? h('div', { style:{ background:'#FFEDED', color:'#D42020', borderRadius:9, padding:'10px 12px', fontSize:12.5, marginBottom:14 } }, props.error) : null,
+      h('form', { onSubmit:submit },
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Nombre y apellido'),
+        h('input', { value:nombre, onChange:function(e){ setNombre(e.target.value); }, placeholder:'Ej: María Gómez', autoFocus:true, style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:14, background:'var(--bg-soft)' } }),
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Teléfono'),
+        h('input', { value:telefono, onChange:function(e){ setTelefono(e.target.value); }, placeholder:'Ej: 261 555-1234', style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:14, background:'var(--bg-soft)' } }),
+        h('label', { style:{ display:'block', fontSize:11.5, fontWeight:800, color:'var(--ink-soft)', textTransform:'uppercase', letterSpacing:'0.03em', marginBottom:6 } }, 'Email'),
+        h('input', { type:'email', value:email, onChange:function(e){ setEmail(e.target.value); }, placeholder:'Ej: maria@correo.com', style:{ width:'100%', padding:'11px 13px', borderRadius:10, border:'1px solid var(--border)', fontSize:14, marginBottom:20, background:'var(--bg-soft)' } }),
+        h('button', { type:'submit', disabled:!valid||enviando, style:{ width:'100%', padding:'13px', borderRadius:999, border:'none', background: (!valid||enviando)?'var(--ink-faint)':'var(--primary)', color:'#fff', fontWeight:800, fontSize:14.5 } }, enviando ? 'Enviando email...' : 'Enviarme el link de acceso'),
+        h('div', { style:{ fontSize:10.5, color:'var(--ink-faint)', textAlign:'center', marginTop:12, lineHeight:1.4 } }, 'Te vamos a mandar un email para confirmar que sos vos. Solo hace falta una vez.')
+      )
+    )
+  );
+}
+
+function EsperandoEmailScreen(props){
+  var email = props.datos ? props.datos.email : '';
+  return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:20 } },
+    h('div', { style:{ width:'100%', maxWidth:400, background:'var(--panel)', borderRadius:20, padding:'34px 26px', boxShadow:'var(--shadow)', textAlign:'center', animation:'popIn 0.2s ease' } },
+      h('div', { style:{ width:56, height:56, borderRadius:999, background:'var(--gold-bg)', color:'var(--gold-dark)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' } }, Icon('phone',24)),
+      h('div', { className:'display', style:{ fontSize:19, fontWeight:700, marginBottom:8 } }, 'Revisá tu email'),
+      h('div', { style:{ fontSize:13.5, color:'var(--ink-soft)', lineHeight:1.6, marginBottom:20 } },
+        'Te mandamos un link a ', h('strong', null, email), ' para confirmar tu acceso. Abrilo desde este mismo dispositivo y navegador para entrar a la tienda automáticamente.'
+      ),
+      h('div', { style:{ fontSize:11.5, color:'var(--ink-faint)', marginBottom:18 } }, 'Si no lo ves, revisá la carpeta de spam.'),
+      h('button', { type:'button', onClick:props.onReintentar, style:{ background:'none', border:'none', color:'var(--primary)', fontWeight:700, fontSize:12.5, textDecoration:'underline', cursor:'pointer' } }, 'Usar otro email')
+    )
+  );
+}
+
+function App(){
+  var neg = useNegocio();
+  var gate = useEmailGate(neg.negocioId);
+
+  if(!neg.authReady || neg.lista===null){
+    return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--ink-faint)' } }, 'Cargando...');
+  }
+  if(neg.lista.length===0){
+    return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', padding:20, color:'var(--ink-faint)' } }, 'Esta tienda todavía no está configurada.');
+  }
+  if(!neg.negocioId){
+    return h(SeleccionNegocio, { lista:neg.lista, onSelect:neg.setNegocioId });
+  }
+  if(gate.estado==='cargando' || gate.estado==='verificando'){
+    return h('div', { style:{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--ink-faint)' } }, gate.estado==='verificando' ? 'Confirmando tu acceso...' : 'Cargando...');
+  }
+  if(gate.estado==='esperando_email'){
+    return h(EsperandoEmailScreen, { datos:gate.datos, onReintentar:gate.reintentar });
+  }
+  if(gate.estado==='necesita_validar'){
+    return h(ValidacionScreen, { onSubmit:gate.enviarLink, error:gate.error });
+  }
+  return h(Tienda, { negocioId: neg.negocioId, datosVisitante: gate.datos, onCambiarDatos: gate.cambiarDatos });
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(h(App));
+
+// ===== Cartel de MODO DEMO + botón de reinicio (ajeno a React) =====
+(function(){
+  var bar = document.createElement('div');
+  bar.setAttribute('style', [
+    'position:fixed','left:0','right:0','bottom:0','z-index:99999',
+    'background:#241536','color:#fff','font-family:Inter,sans-serif',
+    'display:flex','align-items:center','justify-content:center','gap:12px',
+    'padding:10px 16px','font-size:13px','box-shadow:0 -2px 12px rgba(0,0,0,.15)',
+    'flex-wrap:wrap','text-align:center'
+  ].join(';'));
+  bar.innerHTML =
+    '<span><strong style="color:#FFC23C">● DEMO</strong> — tienda de ejemplo, no conectada a ningún negocio real. Se reinicia sola al recargar.</span>' +
+    '<button id="demo-reset-btn" style="background:#F5008F;color:#fff;border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;">Reiniciar demo</button>';
+  document.body.appendChild(bar);
+  document.getElementById('demo-reset-btn').addEventListener('click', function(){ location.reload(); });
+  var spacer = document.createElement('div');
+  spacer.setAttribute('style','height:48px');
+  document.body.appendChild(spacer);
+})();
+
+
+</script>
+</body>
+</html>
