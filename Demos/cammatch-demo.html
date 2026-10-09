@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>CamMatch — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --black:   #000000;
+  --dark:    #0a0a0a;
+  --surface: #111111;
+  --border:  rgba(255,255,255,0.08);
+  --green:   #00ff87;
+  --green2:  #00c27a;
+  --red:     #ff3b3b;
+  --white:   #ffffff;
+  --muted:   rgba(255,255,255,0.4);
+  --mono:    'DM Mono', monospace;
+  --head:    'Bebas Neue', sans-serif;
+  --body:    'Barlow', sans-serif;
+  --cond:    'Barlow Condensed', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  margin: 0; padding: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--body);
+}
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── SPLASH ── */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--black);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0;
+  transition: opacity 0.6s ease;
+}
+#splash.out { opacity: 0; pointer-events: none; }
+.splash-logo {
+  font-family: var(--head);
+  font-size: clamp(3.5rem, 12vw, 6rem);
+  letter-spacing: 8px;
+  color: var(--white);
+  line-height: 1;
+}
+.splash-logo span { color: var(--green); }
+.splash-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--muted);
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+.splash-line {
+  width: 1px; height: 0;
+  background: var(--green);
+  margin-top: 40px;
+  animation: lineGrow 1.4s ease forwards 0.3s;
+}
+@keyframes lineGrow { to { height: 60px; } }
+
+/* ── SCREENS ── */
+.screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+  background: var(--black);
+}
+.screen.active { display: flex; }
+
+/* ── LOGIN ── */
+#screen-login {
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.login-wrap {
+  width: 100%; max-width: 380px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.login-logo {
+  font-family: var(--head);
+  font-size: 3.2rem; letter-spacing: 6px;
+  color: var(--white); line-height: 1;
+  margin-bottom: 4px;
+}
+.login-logo span { color: var(--green); }
+.login-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,255,135,0.08);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: 2px;
+  color: var(--green);
+  margin-bottom: 40px;
+  width: fit-content;
+}
+.login-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.login-title {
+  font-family: var(--cond);
+  font-size: 13px; letter-spacing: 3px;
+  color: var(--muted); text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.btn-google {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-family: var(--cond);
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-google:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.2);
+}
+.btn-google img { width: 18px; height: 18px; }
+.login-footer {
+  margin-top: 24px;
+  font-family: var(--body);
+  font-size: 11px; color: var(--muted);
+  text-align: center; line-height: 1.6;
+}
+.login-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border);
+}
+.login-divider span {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--muted); letter-spacing: 2px;
+}
+
+
+/* ══ HOME — Diseño inmersivo ══ */
+#screen-home {
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  background: #000;
+}
+
+/* Header mínimo */
+.home-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+}
+.home-logo {
+  font-family: var(--head);
+  font-size: 1.4rem;
+  letter-spacing: 5px;
+  color: #fff;
+}
+.home-logo span { color: var(--green); }
+.home-user { display: flex; align-items: center; gap: 10px; }
+.home-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--green2), #0077e6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  overflow: hidden; flex-shrink: 0;
+}
+.home-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.btn-logout {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+  padding: 5px 12px; border-radius: 6px;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+}
+.btn-logout:hover { border-color: rgba(255,59,59,0.4); color: #ff6b6b; }
+
+/* Body = preview a pantalla completa */
+.home-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Preview ocupa todo */
+.stream-preview {
+  flex: 1;
+  position: relative;
+  background: #0a0a0a;
+  overflow: hidden;
+  min-height: 0;
+}
+.stream-preview video {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.stream-preview-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  color: rgba(255,255,255,0.12);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+}
+.stream-preview-placeholder i { font-size: 3rem; }
+
+/* Overlays sobre el video */
+#live-badge {
+  position: absolute; top: 60px; left: 14px; z-index: 5;
+  background: var(--red); color: #fff;
+  font-family: var(--mono); font-size: 9px; font-weight: 500;
+  letter-spacing: 2px; padding: 4px 10px; border-radius: 4px;
+  align-items: center; gap: 6px; display: none;
+}
+#viewer-badge {
+  position: absolute; top: 60px; right: 14px; z-index: 5;
+  background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1px; padding: 4px 10px; border-radius: 4px;
+  align-items: center; gap: 6px; display: none;
+}
+#stream-timer {
+  position: absolute; bottom: 110px; left: 14px; z-index: 5;
+  font-family: var(--mono); font-size: 13px; color: #fff;
+  letter-spacing: 2px; background: rgba(0,0,0,0.55);
+  padding: 4px 10px; border-radius: 4px; display: none;
+}
+#btn-flip {
+  position: absolute; bottom: 110px; right: 14px; z-index: 5;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2);
+  color: white; cursor: pointer; font-size: 14px;
+  align-items: center; justify-content: center;
+  display: none; transition: all 0.2s;
+}
+#btn-flip.show { display: flex; }
+
+/* Overlay marcador sobre video — aparece al tocar */
+#cm-score-overlay {
+  position: absolute;
+  top: 55px; left: 50%; transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 12px 20px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+  min-width: 240px;
+}
+#cm-score-overlay.visible { display: flex; }
+.cm-score-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+}
+.cm-score-nombre {
+  flex: 1; font-family: var(--mono); font-size: 11px;
+  color: rgba(255,255,255,0.5); letter-spacing: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cm-score-val {
+  font-family: var(--head); font-size: 2rem; min-width: 32px;
+  text-align: center; line-height: 1;
+}
+.cm-score-btns { display: flex; gap: 6px; }
+.cm-score-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: #fff; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; transition: all 0.15s;
+}
+.cm-score-btn:active { transform: scale(0.9); }
+
+/* Barra de acciones abajo */
+.action-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 15;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 60%, transparent 100%);
+  padding: 20px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botón principal */
+.btn-main {
+  width: 100%; padding: 16px;
+  border: none; border-radius: 14px;
+  font-family: var(--mono); font-size: 14px;
+  font-weight: 700; letter-spacing: 2px;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.2s; touch-action: manipulation;
+}
+.btn-main.start { background: var(--green); color: #001a0d; }
+.btn-main.start:hover { background: #00e87a; }
+.btn-main.start:active { transform: scale(0.98); }
+.btn-main.activar {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: #fff;
+}
+.btn-main.stop {
+  background: rgba(255,59,59,0.1);
+  border: 1.5px solid rgba(255,59,59,0.4);
+  color: #ff6b6b;
+}
+
+/* Botones secundarios en fila */
+.action-row {
+  display: flex; gap: 8px;
+}
+.btn-action {
+  flex: 1; padding: 11px 8px;
+  border-radius: 10px; border: none;
+  font-family: var(--mono); font-size: 11px;
+  font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.15s; touch-action: manipulation;
+}
+.btn-action.config {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6);
+}
+.btn-action.config:active { background: rgba(255,255,255,0.15); }
+.btn-action.grabar {
+  background: rgba(0,229,160,0.1);
+  border: 1px solid rgba(0,229,160,0.25);
+  color: #00e5a0;
+}
+.btn-action.analisis {
+  background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.25);
+  color: #a5b4fc;
+}
+.btn-action.analizar-video {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  color: #a78bfa;
+}
+.btn-action.score-toggle {
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  color: #fbbf24;
+}
+.btn-action.pdf-btn {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #f87171;
+}
+
+/* Countdown sobre action bar */
+#cm-countdown {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 2px; color: #fbbf24;
+  text-align: center; display: none;
+}
+
+/* ── PANEL CONFIGURACIÓN (drawer desde arriba) ── */
+.config-drawer {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(5,10,25,0.98);
+  border-bottom: 1px solid rgba(0,194,122,0.2);
+  border-radius: 0 0 20px 20px;
+  padding: 0 16px 20px;
+  transform: translateY(-100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.config-drawer.open { transform: translateY(0); }
+.config-drawer-handle {
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 99px;
+  margin: 14px auto 16px;
+}
+.config-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99; display: none;
+}
+.config-overlay.open { display: block; }
+
+/* Campos dentro del config drawer */
+.cfg-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 2.5px; color: rgba(255,255,255,0.3);
+  text-transform: uppercase; margin-bottom: 8px; margin-top: 14px;
+}
+.dur-btn {
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; color: rgba(255,255,255,0.45);
+  font-family: var(--mono); font-size: 11px;
+  font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all .2s;
+}
+.dur-btn:hover { background:rgba(0,194,122,0.1); border-color:rgba(0,194,122,0.3); color:#00e5a0; }
+.dur-btn.active { background:rgba(0,194,122,0.15); border-color:rgba(0,194,122,0.5); color:#00e5a0; }
+
+.nombre-input {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px; padding: 8px 8px 8px 26px;
+  color: #fff; font-family: var(--mono); font-size: 12px;
+  outline: none; box-sizing: border-box; transition: border-color 0.2s;
+}
+.nombre-input:focus { border-color: rgba(0,194,122,0.35); }
+
+/* Cam options y quality */
+.cam-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cam-opt {
+  padding: 10px; background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.cam-opt.active { background:rgba(0,194,122,0.08); border-color:rgba(0,194,122,0.35); }
+.cam-opt-icon { font-size: 1.2rem; color: rgba(255,255,255,0.3); margin-bottom:4px; }
+.cam-opt.active .cam-opt-icon { color: var(--green); }
+.cam-opt-label { font-size:11px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,0.5); }
+.cam-opt.active .cam-opt-label { color: var(--green); }
+.cam-opt-desc { font-size:9px; color:rgba(255,255,255,0.2); margin-top:2px; }
+.quality-row { display: flex; gap: 8px; }
+.quality-btn {
+  flex:1; padding:9px; background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08); border-radius:8px;
+  color:rgba(255,255,255,0.3); font-family:var(--mono);
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  cursor:pointer; transition:all 0.15s;
+}
+.quality-btn.active { background:rgba(0,194,122,0.1); border-color:rgba(0,194,122,0.4); color:var(--green); }
+
+/* No cancha warning */
+.no-cancha-warning {
+  background: rgba(255,165,0,0.05); border: 1px solid rgba(255,165,0,0.15);
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 10px; margin-top: 14px;
+}
+.no-cancha-warning i { color: #ffa500; font-size: 1rem; flex-shrink:0; margin-top:1px; }
+.no-cancha-warning p { font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; }
+.no-cancha-warning strong { color:rgba(255,255,255,0.8); }
+
+/* Stats drawer (desde abajo) */
+.stats-drawer {
+  position: fixed; bottom:0; left:0; right:0;
+  background: rgba(5,10,25,0.98);
+  border-top: 1px solid rgba(0,194,122,0.2);
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px 32px; z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 75vh; overflow-y: auto;
+}
+.stats-drawer.open { transform: translateY(0); }
+.stats-drawer-handle {
+  width: 40px; height: 4px; background: rgba(255,255,255,0.15);
+  border-radius: 99px; margin: 12px auto 16px;
+}
+.stats-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 99; display: none;
+}
+.stats-drawer-overlay.open { display: block; }
+
+/* Grabación */
+#grab-controls { display: none; }
+#grab-controls.visible { display: flex !important; }
+.rec-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fbbf24; display: inline-block; animation: recPulse 1s infinite;
+}
+@keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Safe area */
+.safe-bottom { height: max(env(safe-area-inset-bottom,16px),16px); }
+
+/* Stream info bar */
+.stream-info-bar {
+  position: absolute; bottom: 96px; left: 0; right: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+}
+.stream-name {
+  font-family: var(--mono); font-size: 11px;
+  color: rgba(255,255,255,0.4); letter-spacing: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
+}
+.stream-status {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 2px; color: rgba(255,255,255,0.2); text-transform: uppercase;
+}
+.stream-status.live { color: var(--red); }
+
+/* Section label */
+.section-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 2.5px; color: rgba(255,255,255,0.25);
+  text-transform: uppercase; margin-bottom: 7px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">CAM<span>MATCH</span></div>
+  <div class="splash-sub">Sistema de Transmisión · PadelMatch</div>
+  <div class="splash-line"></div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner">
+    <i class="fas fa-circle-notch"></i>
+    <p id="loading-text">CONECTANDO...</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN: LOGIN
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-login">
+  <div class="login-wrap">
+    <div class="login-logo">CAM<span>MATCH</span></div>
+    <div class="login-badge">SISTEMA DE TRANSMISIÓN</div>
+    <div class="login-title">Acceso para administradores de cancha</div>
+
+    <button class="btn-google" id="btn-google-login">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.3z"/></svg>
+      Continuar con Google
+    </button>
+
+    <div class="login-divider"><span>info</span></div>
+
+    <div class="login-footer">
+      Solo cuentas de tipo <strong style="color:rgba(255,255,255,0.8)">Admin Cancha</strong> pueden<br>
+      acceder al sistema de transmisión.<br><br>
+      Los streams son exclusivos para usuarios de PadelMatch.
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     SCREEN: HOME / TRANSMISIÓN
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+
+  <!-- Header flotante -->
+  <div class="home-header">
+    <div class="home-logo">CAM<span>MATCH</span></div>
+    <div class="home-user">
+      <div class="home-avatar" id="user-avatar">?</div>
+      <button class="btn-logout" id="btn-logout">SALIR</button>
+    </div>
+  </div>
+
+  <!-- Body = preview + action bar -->
+  <div class="home-body">
+
+    <!-- Preview a pantalla completa -->
+    <div class="stream-preview" id="stream-preview">
+      <div class="stream-preview-placeholder" id="preview-placeholder">
+        <i class="fas fa-video-slash"></i>
+        <p>CÁMARA INACTIVA</p>
+      </div>
+      <video id="local-video" autoplay muted playsinline></video>
+      <canvas id="cm-watermark-canvas" style="display:none;"></canvas>
+      <div id="cm-logo-overlay" style="display:none;position:absolute;bottom:100px;right:14px;z-index:6;pointer-events:none;">
+        <canvas id="cm-logo-live" width="110" height="30"></canvas>
+      </div>
+
+      <!-- Badges sobre el video -->
+      <div id="live-badge">
+        <div class="live-dot"></div> EN VIVO
+      </div>
+      <div id="viewer-badge">
+        <i class="fas fa-eye"></i><span id="viewer-count">0</span>
+      </div>
+      <div id="stream-timer">00:00:00</div>
+      <button id="btn-flip" title="Cambiar cámara" class="btn-flip">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+
+      <!-- Overlay marcador — aparece al tocar el botón 🏆 -->
+      <div id="cm-score-overlay">
+        <!-- Eq1 -->
+        <div class="cm-score-row">
+          <div class="cm-score-nombre">
+            <input id="score-name1" type="text" placeholder="Equipo 1" maxlength="12"
+                   style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.15);
+                          color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;
+                          outline:none;width:100%;padding:2px 0;">
+          </div>
+          <div class="cm-score-val" id="score-val1" style="color:#00e5a0;">0</div>
+          <div class="cm-score-btns">
+            <button class="cm-score-btn" onclick="window._scoreChange(1,-1)">−</button>
+            <button class="cm-score-btn" onclick="window._scoreChange(1,1)" style="background:rgba(0,194,122,0.2);border-color:rgba(0,194,122,0.4);color:#00e5a0;">+</button>
+          </div>
+        </div>
+        <!-- VS -->
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:rgba(255,255,255,0.2);letter-spacing:2px;">VS</div>
+        <!-- Eq2 -->
+        <div class="cm-score-row">
+          <div class="cm-score-nombre">
+            <input id="score-name2" type="text" placeholder="Equipo 2" maxlength="12"
+                   style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.15);
+                          color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;
+                          outline:none;width:100%;padding:2px 0;">
+          </div>
+          <div class="cm-score-val" id="score-val2" style="color:#ef4444;">0</div>
+          <div class="cm-score-btns">
+            <button class="cm-score-btn" onclick="window._scoreChange(2,-1)">−</button>
+            <button class="cm-score-btn" onclick="window._scoreChange(2,1)" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);color:#ef4444;">+</button>
+          </div>
+        </div>
+        <!-- Reset -->
+        <button onclick="window._scoreReset()"
+                style="margin-top:4px;width:100%;padding:6px;background:rgba(255,255,255,0.05);
+                       border:1px solid rgba(255,255,255,0.1);border-radius:6px;
+                       color:rgba(255,255,255,0.3);font-family:'Barlow Condensed',sans-serif;
+                       font-size:11px;letter-spacing:1px;cursor:pointer;">
+          REINICIAR
+        </button>
+      </div>
+
+      <!-- Stream info bar -->
+      <div class="stream-info-bar">
+        <div class="stream-name" id="stream-name">Sin cancha seleccionada</div>
+        <div class="stream-status" id="stream-status">INACTIVO</div>
+      </div>
+    </div>
+
+    <!-- Barra de acciones (flotante abajo) -->
+    <div class="action-bar" id="action-bar">
+
+      <!-- Countdown -->
+      <div id="cm-countdown" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;
+           letter-spacing:2px;color:#fbbf24;text-align:center;display:none;">
+        ⏳ <span id="cm-countdown-val">--:--</span>
+      </div>
+
+      <!-- Botón principal -->
+      <button class="btn-main activar" id="btn-preview-cam">
+        <i class="fas fa-video"></i> ACTIVAR CÁMARA
+      </button>
+      <button class="btn-main start" id="btn-stream" style="display:none;">
+        <i class="fas fa-broadcast-tower"></i> INICIAR TRANSMISIÓN
+      </button>
+
+      <!-- Fila secundaria — visible siempre -->
+      <div class="action-row">
+        <button class="btn-action config" onclick="window.abrirConfigDrawer()">
+          <i class="fas fa-sliders-h"></i> CONFIG
+        </button>
+        <button class="btn-action score-toggle" id="btn-score-toggle" onclick="window.toggleScoreOverlay()">
+          <i class="fas fa-trophy"></i> MARCADOR
+        </button>
+        <button class="btn-action analisis" onclick="window.abrirStatsDrawer()">
+          <i class="fas fa-chart-bar"></i> ANÁLISIS
+        </button>
+      </div>
+
+      <!-- Botón subir video — siempre visible, independiente del stream -->
+      <div class="action-row">
+        <button class="btn-action analizar-video" id="btn-analizar-video"
+                style="flex:1;touch-action:manipulation;font-size:12px;padding:13px 8px;letter-spacing:1.5px;">
+          <i class="fas fa-film"></i> SUBIR VIDEO PARA ANÁLISIS IA
+        </button>
+      </div>
+      <input id="input-video-ia" type="file" accept="video/*" style="display:none;">
+
+      <!-- Fila grabación (solo visible durante el stream) -->
+      <div class="action-row" id="grab-controls">
+        <button id="btn-grabar"
+                style="flex:1;padding:11px;border-radius:10px;background:rgba(0,229,160,0.1);
+                       border:1.5px solid rgba(0,229,160,0.25);color:#00e5a0;
+                       font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+                       letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;
+                       justify-content:center;gap:7px;transition:all .2s;">
+          <i class="fas fa-circle"></i> GRABAR
+        </button>
+        <button id="btn-descargar"
+                style="display:none;flex:1;padding:11px;border-radius:10px;
+                       background:rgba(79,209,255,0.1);border:1.5px solid rgba(79,209,255,0.25);
+                       color:#4fd1ff;font-family:'Barlow Condensed',sans-serif;font-size:11px;
+                       font-weight:700;letter-spacing:1.5px;cursor:pointer;align-items:center;
+                       justify-content:center;gap:7px;transition:all .2s;">
+          <i class="fas fa-download"></i> DESCARGAR
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /home-body -->
+</div><!-- /screen-home -->
+
+<!-- ══ OVERLAY config drawer ══ -->
+<div class="config-overlay" id="config-overlay" onclick="window.cerrarConfigDrawer()"></div>
+<div class="config-drawer" id="config-drawer">
+  <div class="config-drawer-handle"></div>
+
+  <!-- Cancha (admin) -->
+  <div id="seccion-cancha">
+    <div class="cfg-label" style="margin-top:0;">📍 Cancha a transmitir</div>
+    <select class="cancha-selector" id="cancha-select" style="width:100%;">
+      <option value="">— Seleccioná tu cancha —</option>
+    </select>
+  </div>
+
+  <!-- Profesor -->
+  <div id="seccion-profesor" style="display:none;">
+    <div class="cfg-label" style="margin-top:0;">Transmitiendo como</div>
+    <div style="background:rgba(0,255,135,0.05);border:1px solid rgba(0,255,135,0.15);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#00c27a,#0077e6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;" id="prof-avatar-cm">P</div>
+      <div>
+        <p style="color:#fff;font-weight:700;font-size:13px;margin:0;" id="prof-nombre-cm">Profesor</p>
+        <p style="color:rgba(0,255,135,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:3px 0 0;">Clase en vivo</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jugador -->
+  <div id="seccion-jugador" style="display:none;">
+    <div class="cfg-label" style="margin-top:0;">Modo entrenamiento</div>
+    <div style="background:rgba(79,209,255,0.05);border:1px solid rgba(79,209,255,0.15);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#4fd1ff,#0077e6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0;"><i class="fas fa-user"></i></div>
+      <div>
+        <p style="color:#fff;font-weight:700;font-size:13px;margin:0;" id="jugador-nombre-cm">Jugador</p>
+        <p style="color:rgba(79,209,255,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:3px 0 0;">Solo vos · privado</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning -->
+  <div class="no-cancha-warning" id="no-cancha-warning" style="display:none;">
+    <i class="fas fa-exclamation-triangle"></i>
+    <p>Tu cuenta no tiene canchas registradas. <strong>Registrá tu cancha primero</strong> desde PadelMatch.</p>
+  </div>
+
+  <!-- Duración -->
+  <div class="cfg-label">⏱ Duración del partido</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="dur-btn active" data-min="60"  onclick="seleccionarDuracion(60)">60 min</button>
+    <button class="dur-btn"        data-min="90"  onclick="seleccionarDuracion(90)">90 min</button>
+    <button class="dur-btn"        data-min="120" onclick="seleccionarDuracion(120)">120 min</button>
+    <button class="dur-btn"        data-min="0"   onclick="seleccionarDuracion(0)">∞ Sin límite</button>
+  </div>
+
+  <!-- Calidad -->
+  <div class="cfg-label">🎬 Calidad de grabación</div>
+  <div style="display:flex;gap:6px;">
+    <button class="dur-btn" data-cal="baja" onclick="seleccionarCalidadGrab('baja')">
+      <span style="display:block;font-size:11px;">BÁSICA</span>
+      <span style="display:block;font-size:9px;opacity:.5;">~250MB/h</span>
+    </button>
+    <button class="dur-btn active" data-cal="media" onclick="seleccionarCalidadGrab('media')">
+      <span style="display:block;font-size:11px;">MEDIA</span>
+      <span style="display:block;font-size:9px;opacity:.5;">~500MB/h</span>
+    </button>
+    <button class="dur-btn" data-cal="alta" onclick="seleccionarCalidadGrab('alta')">
+      <span style="display:block;font-size:11px;">ALTA</span>
+      <span style="display:block;font-size:9px;opacity:.5;">~900MB/h</span>
+    </button>
+  </div>
+  <div id="grab-cal-info" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:1px;text-align:center;padding:4px 0;">720p · 1.1 Mbps</div>
+
+  <!-- Fuente de cámara -->
+  <div class="cfg-label">📷 Fuente de cámara</div>
+  <div class="cam-options">
+    <div class="cam-opt active" id="cam-trasera" onclick="setCamMode('trasera')">
+      <div class="cam-opt-icon"><i class="fas fa-mobile-alt"></i></div>
+      <div class="cam-opt-label">Trasera</div>
+      <div class="cam-opt-desc">Principal del dispositivo</div>
+    </div>
+    <div class="cam-opt" id="cam-frontal" onclick="setCamMode('frontal')">
+      <div class="cam-opt-icon"><i class="fas fa-user"></i></div>
+      <div class="cam-opt-label">Frontal</div>
+      <div class="cam-opt-desc">Cámara delantera</div>
+    </div>
+  </div>
+
+  <!-- Calidad transmisión -->
+  <div class="cfg-label">📡 Calidad de transmisión</div>
+  <div class="quality-row">
+    <button class="quality-btn"        onclick="setQuality('720')"  id="q-720">720p</button>
+    <button class="quality-btn active" onclick="setQuality('1080')" id="q-1080">1080p</button>
+    <button class="quality-btn"        onclick="setQuality('4k')"   id="q-4k">4K</button>
+  </div>
+
+  <!-- Nombres jugadores -->
+  <div class="cfg-label">👥 Nombres de jugadores (opcional)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div style="background:rgba(0,229,160,0.04);border:1px solid rgba(0,229,160,0.12);border-radius:10px;padding:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:#00e5a0;margin-bottom:7px;">EQ 1</div>
+      <div style="position:relative;margin-bottom:6px;">
+        <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#00e5a0;"></span>
+        <input id="cm-nombre-j1" type="text" placeholder="J1" maxlength="16" class="nombre-input">
+      </div>
+      <div style="position:relative;">
+        <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#ef4444;"></span>
+        <input id="cm-nombre-j2" type="text" placeholder="J2" maxlength="16" class="nombre-input" style="border-color:rgba(239,68,68,0.12);">
+      </div>
+    </div>
+    <div style="background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.12);border-radius:10px;padding:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:#60a5fa;margin-bottom:7px;">EQ 2</div>
+      <div style="position:relative;margin-bottom:6px;">
+        <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#60a5fa;"></span>
+        <input id="cm-nombre-j3" type="text" placeholder="J3" maxlength="16" class="nombre-input" style="border-color:rgba(96,165,250,0.12);">
+      </div>
+      <div style="position:relative;">
+        <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:#fbbf24;"></span>
+        <input id="cm-nombre-j4" type="text" placeholder="J4" maxlength="16" class="nombre-input" style="border-color:rgba(251,191,36,0.12);">
+      </div>
+    </div>
+  </div>
+  <p style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:rgba(255,255,255,0.2);margin:6px 0 0;letter-spacing:1px;text-align:center;">Los colores coinciden con los del análisis en pantalla</p>
+
+  <div style="height:16px;"></div>
+</div>
+
+<!-- ══ Stats drawer (desde abajo) ══ -->
+<div class="stats-drawer-overlay" id="stats-drawer-overlay" onclick="window.cerrarStatsDrawer()"></div>
+<div class="stats-drawer" id="stats-drawer">
+  <div class="stats-drawer-handle"></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:16px;">📊 Análisis en tiempo real</div>
+  <div id="stats-drawer-content">
+    <p style="text-align:center;color:rgba(255,255,255,0.2);font-size:12px;padding:20px 0;">Iniciá la transmisión para ver el análisis</p>
+  </div>
+</div>
+
+
+<!-- MODO DEMO: sin conexión a Firebase real ni a PadelMatch. Este bloque reemplaza al SDK
+     de Firebase por un motor que simula Firestore/Auth 100% en memoria del navegador, con
+     una cuenta de admin de cancha y una cancha de ejemplo ya precargadas. La cámara SÍ es
+     real (se usa la del dispositivo del visitante) pero la transmisión no llega a nadie:
+     el contador de "espectadores" que aparece a los pocos segundos es simulado, para
+     mostrar cómo se ve la pantalla en un partido real. Nada se guarda ni se comparte con
+     ningún negocio real; se pierde todo al recargar la página. -->
+<script id="mock-firebase-demo">
+"use strict";
+(function(){
+  var STORE = Object.create(null);
+  var listeners = [];
+  var notifyScheduled = false;
+  function scheduleNotify(){
+    if(notifyScheduled) return;
+    notifyScheduled = true;
+    setTimeout(function(){
+      notifyScheduled = false;
+      listeners.slice().forEach(function(l){ try{ l(); }catch(e){ console.error(e); } });
+    }, 0);
+  }
+  function genId(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9); }
+  function clone(o){ return o===undefined ? undefined : JSON.parse(JSON.stringify(o)); }
+
+  function DocRef(path){ this.path = path; this.id = path.split('/').pop(); }
+  DocRef.prototype.collection = function(name){ return new CollectionRef(this.path + '/' + name); };
+  function makeDocSnap(path){
+    var data = STORE[path];
+    return { exists: data !== undefined, id: path.split('/').pop(), path: path, data: function(){ return clone(data); } };
+  }
+  DocRef.prototype.get = function(){ return Promise.resolve(makeDocSnap(this.path)); };
+  DocRef.prototype.set = function(data, opts){
+    var cur = STORE[this.path];
+    var merge = opts && opts.merge;
+    STORE[this.path] = (merge && cur) ? Object.assign({}, cur, data) : Object.assign({}, data);
+    scheduleNotify();
+    return Promise.resolve();
+  };
+  DocRef.prototype.update = function(data){
+    if(STORE[this.path] === undefined) return Promise.reject(new Error('No document to update'));
+    STORE[this.path] = Object.assign({}, STORE[this.path], data);
+    scheduleNotify();
+    return Promise.resolve();
+  };
+  DocRef.prototype.delete = function(){ delete STORE[this.path]; scheduleNotify(); return Promise.resolve(); };
+  DocRef.prototype.onSnapshot = function(a, b){
+    var cb = (typeof a === 'function') ? a : b;
+    var self = this;
+    var fn = function(){ cb(makeDocSnap(self.path)); };
+    listeners.push(fn);
+    setTimeout(fn, 0);
+    return function(){ var i = listeners.indexOf(fn); if(i>=0) listeners.splice(i,1); };
+  };
+
+  function CollectionRef(path){ this.path = path; this._filters = []; }
+  CollectionRef.prototype.doc = function(id){ return new DocRef(this.path + '/' + (id || genId())); };
+  CollectionRef.prototype.add = function(data){
+    var ref = this.doc();
+    return ref.set(data).then(function(){
+      if(ref.path.indexOf('streams/') === 0 && ref.path.split('/').length === 2) simularEspectadores(ref);
+      return ref;
+    });
+  };
+  CollectionRef.prototype.where = function(field, op, value){
+    var q = new CollectionRef(this.path);
+    q._filters = this._filters.concat([{ field:field, op:op, value:value }]);
+    return q;
+  };
+  function cmp(a, op, b){
+    if(op==='==') return a===b;
+    if(op==='!=') return a!==b;
+    if(op==='>=') return a>=b;
+    if(op==='<=') return a<=b;
+    if(op==='>')  return a>b;
+    if(op==='<')  return a<b;
+    return true;
+  }
+  CollectionRef.prototype._docs = function(){
+    var prefix = this.path + '/';
+    var out = [];
+    Object.keys(STORE).forEach(function(p){
+      if(p.indexOf(prefix) === 0 && p.slice(prefix.length).indexOf('/') === -1) out.push({ path:p, id:p.slice(prefix.length) });
+    });
+    var filters = this._filters;
+    if(filters.length){
+      out = out.filter(function(m){
+        var d = STORE[m.path] || {};
+        return filters.every(function(f){ return cmp(d[f.field], f.op, f.value); });
+      });
+    }
+    return out;
+  };
+  function makeQuerySnap(docsMeta){
+    var docs = docsMeta.map(function(m){
+      return { id:m.id, data:function(){ return clone(STORE[m.path]); }, ref:new DocRef(m.path), metadata:{ hasPendingWrites:false } };
+    });
+    return { docs:docs, size:docs.length, empty:docs.length===0, forEach:function(fn){ docs.forEach(fn); }, docChanges:function(){ return []; } };
+  }
+  CollectionRef.prototype.get = function(){ return Promise.resolve(makeQuerySnap(this._docs())); };
+  CollectionRef.prototype.onSnapshot = function(a, b){
+    var cb = (typeof a === 'function') ? a : b;
+    var self = this;
+    var fn = function(){ cb(makeQuerySnap(self._docs())); };
+    listeners.push(fn);
+    setTimeout(fn, 0);
+    return function(){ var i = listeners.indexOf(fn); if(i>=0) listeners.splice(i,1); };
+  };
+
+  function Firestore(){}
+  Firestore.prototype.collection = function(name){ return new CollectionRef(name); };
+  var dbInstance = new Firestore();
+  function firestoreFn(){ return dbInstance; }
+  firestoreFn.FieldValue = { serverTimestamp: function(){ return Date.now(); } };
+  firestoreFn.Timestamp = { fromDate: function(d){ return d.getTime(); } };
+
+  function Auth(){}
+  Auth.prototype.onAuthStateChanged = function(cb){
+    authInstance._cb = cb;
+    setTimeout(function(){ cb(authInstance.currentUser); }, 0);
+    return function(){};
+  };
+  Auth.prototype.signInWithPopup = function(){
+    authInstance.currentUser = DEMO_USER;
+    if(authInstance._cb) setTimeout(function(){ authInstance._cb(DEMO_USER); }, 0);
+    return Promise.resolve({ user: DEMO_USER });
+  };
+  Auth.prototype.signOut = function(){
+    authInstance.currentUser = null;
+    if(authInstance._cb) setTimeout(function(){ authInstance._cb(null); }, 0);
+    return Promise.resolve();
+  };
+  var authInstance = new Auth();
+  authInstance.currentUser = null;
+  var DEMO_USER = { uid:'demo-uid', email:'demo@padelmatch.com', displayName:'Franco Ibáñez', photoURL:null };
+
+  function authFn(){ return authInstance; }
+  authFn.GoogleAuthProvider = function(){ this.setCustomParameters = function(){}; };
+
+  window.firebase = {
+    initializeApp: function(){ /* modo demo: no se conecta a ningún proyecto real */ },
+    auth: authFn,
+    firestore: firestoreFn
+  };
+
+  // ===== Cuenta demo + cancha de ejemplo (se recrean en cada carga) =====
+  STORE['users/demo-uid'] = { nombre:'Franco', apellido:'Ibáñez', tipo_usuario:'admin_cancha', email:'demo@padelmatch.com' };
+  STORE['canchas/demo-cancha-1'] = { admin_id:'demo-uid', nombre:'Cancha 1 — Central Padel', activo:true };
+  STORE['canchas/demo-cancha-2'] = { admin_id:'demo-uid', nombre:'Cancha 2 — Central Padel', activo:true };
+
+  // ===== Espectadores simulados: cuando arranca una transmisión, el contador de
+  // espectadores sube solo (no hay video real llegando a nadie, es solo el contador) =====
+  function simularEspectadores(streamRef){
+    var pasos = [ [4000,1], [9000,2], [17000,1], [26000,3], [40000,2] ];
+    pasos.forEach(function(p){
+      setTimeout(function(){
+        if(STORE[streamRef.path] && STORE[streamRef.path].estado === 'activo'){
+          streamRef.update({ viewers: p[1] }).catch(function(){});
+        }
+      }, p[0]);
+    });
+  }
+})();
+</script>
+<!-- Google Identity Services para token de Drive (evita problema COOP) -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+
+<script>
+// ═══════════════════════════════════════
+// FIREBASE CONFIG
+// ═══════════════════════════════════════
+const firebaseConfig = {
+  // MODO DEMO: no se usa ningún proyecto real (ver mock-firebase-demo más arriba)
+  apiKey: "demo", authDomain: "demo", projectId: "demo"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentUser    = null;
+let userProfile    = null;
+let localStream    = null;
+let peerConnections = {};   // uid espectador → RTCPeerConnection
+let streamDocRef   = null;
+let _wakeLock      = null;  // Wake Lock para mantener pantalla encendida
+let streamInterval = null;
+let streamStartTime = null;
+let streamSeconds  = 0;
+let viewerUnsub    = null;
+let camMode        = 'trasera';
+let quality        = '1080';
+let selectedCanchaId = null;
+let streamsHoy     = 0;
+
+// Duración programada
+let _duracionMinutos  = 60;   // duración elegida por el admin (0 = sin límite)
+let _countdownInterval = null; // interval de la cuenta regresiva
+
+// Calidad de grabación
+// baja: 480p 500kbps | media: 720p 1.1Mbps | alta: 1080p 2.5Mbps
+const _CALIDADES_GRAB = {
+    baja:  { width: 854,  height: 480,  videoBitsPerSecond:  500_000, label: '480p · 0.5 Mbps — mínimo peso, calidad reducida' },
+    media: { width: 1280, height: 720,  videoBitsPerSecond: 1_100_000, label: '720p · 1.1 Mbps — buena calidad para la mayoría de partidos' },
+    alta:  { width: 1920, height: 1080, videoBitsPerSecond: 2_500_000, label: '1080p · 2.5 Mbps — máxima calidad, mayor peso' },
+};
+let _calidadGrab = 'media';
+
+// Calidades
+const QUALITY_MAP = {
+  '720':  { width: 1280, height: 720,  frameRate: 30, bitrate: 2500000 },
+  '1080': { width: 1920, height: 1080, frameRate: 30, bitrate: 5000000 },
+  '4k':   { width: 3840, height: 2160, frameRate: 30, bitrate: 15000000 }
+};
+
+// STUN/TURN servers (gratuitos para MVP)
+const ICE_SERVERS = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        {
+            urls: 'turn:free.expressturn.com:3478',
+            username: '000000002090280773',
+            credential: 'SpcTudoXa4NXWtsr2GwtjwDU9xo='
+        },
+        {
+            urls: 'turns:free.expressturn.com:443',
+            username: '000000002090280773',
+            credential: 'SpcTudoXa4NXWtsr2GwtjwDU9xo='
+        }
+    ]
+};
+
+// ═══════════════════════════════════════
+// SPLASH → mostrar login
+// ═══════════════════════════════════════
+setTimeout(() => {
+  const splash = document.getElementById('splash');
+  splash.classList.add('out');
+  setTimeout(() => splash.remove(), 700);
+}, 2200);
+
+// ═══════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    showLoading('CARGANDO PERFIL...');
+    await loadUserProfile();
+    hideLoading();
+    showScreen('home');
+  } else {
+    currentUser = null;
+    userProfile = null;
+    showScreen('login');
+  }
+});
+
+document.getElementById('btn-google-login').onclick = async () => {
+  try {
+    showLoading('CONECTANDO...');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    // Solo pedimos el scope básico al login — el scope de Drive
+    // se pide solo cuando el usuario quiere subir un video
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await auth.signInWithPopup(provider);
+  } catch (e) {
+    hideLoading();
+    showToast('Error al iniciar sesión', 'error');
+  }
+};
+
+document.getElementById('btn-logout').onclick = async () => {
+  if (localStream) await detenerStream();
+  await auth.signOut();
+};
+
+// ═══════════════════════════════════════
+// PERFIL + CANCHAS
+// ═══════════════════════════════════════
+async function loadUserProfile() {
+  try {
+    // Buscar en users (colección principal de PadelMatch)
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if (doc.exists) {
+      userProfile = doc.data();
+    } else {
+      // Fallback a usuarios
+      const doc2 = await db.collection('usuarios').doc(currentUser.uid).get();
+      userProfile = doc2.exists ? doc2.data() : { nombre: currentUser.displayName };
+    }
+
+    // Actualizar UI
+    const av = document.getElementById('user-avatar');
+    if (currentUser.photoURL) {
+      av.innerHTML = `<img src="${currentUser.photoURL}">`;
+    } else {
+      const n = (userProfile?.nombre || currentUser.displayName || '?');
+      av.textContent = n.charAt(0).toUpperCase();
+    }
+
+    // Detectar tipo de usuario y mostrar sección correcta
+    if (userProfile && userProfile.tipo_usuario === 'profesor') {
+      await cargarModoProfesor();
+    } else {
+      await loadCanchas();
+    }
+    await loadStreamsHoy();
+  } catch (e) {
+    console.error('Error cargando perfil:', e);
+  }
+}
+
+async function cargarModoProfesor() {
+  // Ocultar selector de cancha, mostrar sección profesor
+  const secCancha   = document.getElementById('seccion-cancha');
+  const secProfesor = document.getElementById('seccion-profesor');
+  if (secCancha)   secCancha.style.display   = 'none';
+  if (secProfesor) secProfesor.style.display  = 'block';
+
+  // Mostrar nombre del profesor
+  const nombre = `${userProfile.nombre || ''} ${userProfile.apellido || ''}`.trim()
+                 || currentUser.displayName || 'Profesor';
+
+  const nomEl = document.getElementById('prof-nombre-cm');
+  const avEl  = document.getElementById('prof-avatar-cm');
+  if (nomEl) nomEl.textContent = nombre;
+  if (avEl)  avEl.textContent  = nombre.charAt(0).toUpperCase();
+
+  // Setear el stream con el uid del profesor como "canchaId"
+  // y su nombre como nombre del stream
+  selectedCanchaId = currentUser.uid;
+  const nameEl = document.getElementById('stream-name');
+  if (nameEl) nameEl.textContent = nombre + ' — Clase en vivo';
+}
+
+async function loadCanchas() {
+  const sel = document.getElementById('cancha-select');
+  try {
+    // Buscar canchas por admin_id — sin filtrar por activo para no perder ninguna
+    let snap = await db.collection('canchas')
+      .where('admin_id', '==', currentUser.uid)
+      .get();
+
+    if (snap.empty) {
+      // Intentar por email_admin
+      snap = await db.collection('canchas')
+        .where('email_admin', '==', currentUser.email)
+        .get();
+    }
+
+    if (snap.empty) {
+      // Último intento: buscar todas y filtrar en cliente
+      const all = await db.collection('canchas').get();
+      const mias = [];
+      all.forEach(d => {
+        const c = d.data();
+        if (c.admin_id === currentUser.uid || c.email_admin === currentUser.email) {
+          mias.push({ id: d.id, ...c });
+        }
+      });
+      if (mias.length === 0) {
+        // No tiene canchas — activar modo jugador privado
+        window._modoJugadorPrivado = true;
+        document.getElementById('seccion-cancha').style.display = 'none';
+        document.getElementById('seccion-jugador').style.display = 'block';
+        const jugNombre = ((userProfile?.nombre || '') + ' ' + (userProfile?.apellido || '')).trim();
+        const jugEl = document.getElementById('jugador-nombre-cm');
+        if (jugEl) jugEl.textContent = jugNombre || 'Jugador';
+        selectedCanchaId = currentUser.uid;
+        document.getElementById('stream-name').textContent = 'Entrenamiento privado';
+        document.getElementById('no-cancha-warning').style.display = 'none';
+        return;
+      }
+      mias.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nombre;
+        sel.appendChild(opt);
+      });
+      if (mias.length === 1) onCanchaChange(mias[0].id, mias[0].nombre);
+      return;
+    }
+
+    snap.forEach(d => {
+      const c = d.data();
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = c.nombre;
+      sel.appendChild(opt);
+    });
+
+    if (snap.size === 1) {
+      sel.value = snap.docs[0].id;
+      onCanchaChange(snap.docs[0].id, snap.docs[0].data().nombre);
+    }
+  } catch (e) {
+    console.error('Error cargando canchas:', e);
+    showToast('Error cargando canchas: ' + e.message, 'error');
+  }
+}
+
+document.getElementById('cancha-select').onchange = function() {
+  const id = this.value;
+  const name = this.options[this.selectedIndex]?.text || '';
+  onCanchaChange(id, name);
+};
+
+function onCanchaChange(id, name) {
+  selectedCanchaId = id || null;
+  document.getElementById('stream-name').textContent = name || 'Sin cancha seleccionada';
+}
+
+async function loadStreamsHoy() {
+  try {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const snap = await db.collection('streams')
+      .where('admin_id', '==', currentUser.uid)
+      .where('created_at', '>=', firebase.firestore.Timestamp.fromDate(hoy))
+      .get();
+    streamsHoy = snap.size;
+    document.getElementById('stat-streams').textContent = streamsHoy;
+  } catch (e) {}
+}
+
+// ═══════════════════════════════════════
+// CÁMARA LOCAL
+// ═══════════════════════════════════════
+async function iniciarCamara() {
+  const q = QUALITY_MAP[quality];
+  const constraints = {
+    video: {
+      facingMode: camMode === 'trasera' ? { ideal: 'environment' } : 'user',
+      width:  { ideal: q.width },
+      height: { ideal: q.height },
+      frameRate: { ideal: q.frameRate }
+    },
+    audio: true
+  };
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const vid = document.getElementById('local-video');
+    vid.srcObject = localStream;
+    vid.style.display = 'block';
+    document.getElementById('preview-placeholder').style.display = 'none';
+    // mostrar btn-flip
+    const flipBtn = document.getElementById('btn-flip');
+    flipBtn.style.display = 'flex';
+    return true;
+  } catch (e) {
+    showToast('No se pudo acceder a la cámara', 'error');
+    return false;
+  }
+}
+
+function detenerCamara() {
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  const vid = document.getElementById('local-video');
+  vid.srcObject = null;
+  vid.style.display = 'none';
+  document.getElementById('preview-placeholder').style.display = 'flex';
+  document.getElementById('btn-flip').style.display = 'none';
+}
+
+// ═══════════════════════════════════════
+// STREAM — INICIAR / DETENER
+// ═══════════════════════════════════════
+// Botón paso 1: activar cámara
+document.getElementById('btn-preview-cam').onclick = async () => {
+  if (!selectedCanchaId && !window._modoJugadorPrivado) {
+    showToast('Seleccioná una cancha primero', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-preview-cam');
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ACTIVANDO...';
+  btn.disabled = true;
+
+  const ok = await iniciarCamara();
+  if (ok) {
+    btn.style.display = 'none';
+    document.getElementById('btn-stream').style.display = 'flex';
+    // Mostrar selector de duración
+    const durSel = document.getElementById('duracion-selector');
+    if (durSel) durSel.style.display = 'block';
+    showToast('Cámara lista. Elegí la duración e iniciá la transmisión.', 'success');
+  } else {
+    btn.innerHTML = '<i class="fas fa-video"></i> ACTIVAR CÁMARA';
+    btn.disabled = false;
+  }
+};
+
+// Botón paso 2: iniciar/detener stream
+document.getElementById('btn-stream').onclick = async () => {
+  if (localStream && streamDocRef) {
+    await detenerStream();
+  } else if (localStream) {
+    await iniciarStream();
+  } else {
+    await iniciarStream();
+  }
+};
+
+async function iniciarStream() {
+  if (!selectedCanchaId && !window._modoJugadorPrivado) {
+    showToast('Seleccioná una cancha primero', 'error');
+    return;
+  }
+
+  showLoading('ACTIVANDO CÁMARA...');
+  const ok = await iniciarCamara();
+  if (!ok) { hideLoading(); return; }
+
+  showLoading('INICIANDO TRANSMISIÓN...');
+
+  // Modo jugador privado — stream solo visible para el jugador
+  if (window._modoJugadorPrivado) {
+    try {
+      const nombreJugador = (userProfile?.nombre || '') + ' ' + (userProfile?.apellido || '');
+      streamDocRef = await db.collection('streams').add({
+        cancha_id:     currentUser.uid,
+        cancha_nombre: 'Entrenamiento privado',
+        admin_id:      currentUser.uid,
+        jugador_id:    currentUser.uid,
+        jugador_nombre: nombreJugador.trim(),
+        estado:        'activo',
+        viewers:       0,
+        calidad:       quality,
+        tipo:          'jugador_privado',
+        privado:       true,
+        visible:       false,
+        created_at:    firebase.firestore.FieldValue.serverTimestamp(),
+        started_at:    firebase.firestore.FieldValue.serverTimestamp(),
+        title:         'Entrenamiento — ' + nombreJugador.trim()
+      });
+      // Iniciar grabación automáticamente
+      setTimeout(() => {
+        const btnGrab = document.getElementById('btn-grabar');
+        if (btnGrab) btnGrab.click();
+      }, 1500);
+      escucharEspectadores();
+      setUILive(true);
+      hideLoading();
+      showToast('Modo privado activo — solo vos podés ver este stream', 'success');
+    } catch(e) {
+      console.error('[CamMatch] Error modo privado:', e);
+      hideLoading();
+      showToast('Error al iniciar', 'error');
+    }
+    return;
+  }
+
+  try {
+    // Crear documento de stream en Firestore
+    const canchaNombre = document.getElementById('stream-name').textContent;
+    const _esProf = userProfile && userProfile.tipo_usuario === 'profesor';
+    streamDocRef = await db.collection('streams').add({
+      cancha_id:     selectedCanchaId,
+      cancha_nombre: canchaNombre,
+      admin_id:      currentUser.uid,
+      estado:        'activo',
+      viewers:       0,
+      calidad:       quality,
+      tipo:          _esProf ? 'profesor' : 'cancha',
+      created_at:    firebase.firestore.FieldValue.serverTimestamp(),
+      started_at:    firebase.firestore.FieldValue.serverTimestamp(),
+      title:         canchaNombre
+    });
+
+    console.log('[CamMatch] Stream creado:', streamDocRef.id, '| cancha:', canchaNombre);
+
+    // Actualizar cancha o usuario (profesor) como "en vivo"
+    const esProfesor = userProfile && userProfile.tipo_usuario === 'profesor';
+    if (esProfesor) {
+      // Para profesores: usar set con merge para que funcione siempre
+      await db.collection('users').doc(currentUser.uid).set({
+        stream_activo: true,
+        stream_id:     streamDocRef.id,
+        tipo_usuario:  'profesor'
+      }, { merge: true });
+      console.log('[CamMatch] ✅ Profesor marcado EN VIVO | uid:', currentUser.uid, '| stream_id:', streamDocRef.id);
+    } else {
+      // Para admins cancha: actualizar en colección canchas
+      await db.collection('canchas').doc(selectedCanchaId).set({
+        stream_activo: true,
+        stream_id:     streamDocRef.id,
+        stream_url:    streamDocRef.id
+      }, { merge: true });
+      console.log('[CamMatch] ✅ Cancha marcada EN VIVO');
+    }
+
+    console.log('[CamMatch] ✅ Stream marcado como EN VIVO en Firestore');
+
+    // Escuchar solicitudes de conexión de espectadores (WebRTC signaling)
+    escucharEspectadores();
+
+    // Escuchar contador de viewers
+    escucharViewers();
+
+    // Iniciar timer
+    streamStartTime = Date.now();
+    streamSeconds = 0;
+    streamInterval = setInterval(actualizarTimer, 1000);
+    _scoreMostrarPanel(true);
+    // Mantener pantalla encendida mientras transmite
+    if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(function(lock) {
+            _wakeLock = lock;
+            console.log('[CamMatch] Wake Lock activado — pantalla no se apagará');
+            _wakeLock.addEventListener('release', function() {
+                console.log('[CamMatch] Wake Lock liberado');
+            });
+        }).catch(function(e) {
+            console.warn('[CamMatch] Wake Lock no disponible:', e.message);
+        });
+    }
+    _scoreGuardar();
+
+    // Contar stream
+    streamsHoy++;
+    document.getElementById('stat-streams').textContent = streamsHoy;
+
+    // Auto-iniciar grabación
+    _iniciarGrabacion();
+
+    // Iniciar cuenta regresiva si hay duración definida
+    _iniciarCountdown();
+
+    // UI → EN VIVO
+    setUILive(true);
+    hideLoading();
+    showToast('¡Transmisión iniciada!', 'success');
+
+  } catch (e) {
+    console.error('Error iniciando stream:', e);
+    hideLoading();
+    detenerCamara();
+    showToast('Error al iniciar la transmisión', 'error');
+  }
+}
+
+async function detenerStream() {
+  showLoading('DETENIENDO...');
+  try {
+    // Cerrar todas las conexiones WebRTC
+    Object.values(peerConnections).forEach(pc => pc.close());
+    peerConnections = {};
+
+    // Cancelar listener de espectadores
+    if (viewerUnsub) { viewerUnsub(); viewerUnsub = null; }
+
+    // Detener timer
+    clearInterval(streamInterval);
+    // Detener cuenta regresiva
+    _detenerCountdown();
+
+    // Actualizar Firestore
+    if (streamDocRef) {
+      const duracion = Math.floor((Date.now() - streamStartTime) / 1000);
+      await streamDocRef.update({
+        estado:   'finalizado',
+        ended_at: firebase.firestore.FieldValue.serverTimestamp(),
+        duracion_segundos: duracion
+      });
+    }
+
+    // Desactivar stream en cancha o en perfil de profesor
+    if (selectedCanchaId) {
+      const esProfesor = userProfile && userProfile.tipo_usuario === 'profesor';
+      if (esProfesor) {
+        await db.collection('users').doc(currentUser.uid).set({
+          stream_activo: false,
+          stream_id:     null
+        }, { merge: true }).catch(() => {});
+        console.log('[CamMatch] Profesor stream_activo = false');
+      } else {
+        await db.collection('canchas').doc(selectedCanchaId).set({
+          stream_activo: false,
+          stream_id:     null,
+          stream_url:    null
+        }, { merge: true }).catch(() => {});
+        console.log('[CamMatch] Cancha stream_activo = false');
+      }
+    }
+
+    detenerCamara();
+    streamDocRef = null;
+    _scoreMostrarPanel(false);
+    // Liberar Wake Lock
+    if (_wakeLock) {
+        _wakeLock.release();
+        _wakeLock = null;
+        console.log('[CamMatch] Wake Lock liberado al detener stream');
+    }
+    setUILive(false);
+    // Volver al paso 1
+    document.getElementById('btn-stream').style.display = 'none';
+    const prevBtn = document.getElementById('btn-preview-cam');
+    prevBtn.style.display = 'flex';
+    prevBtn.innerHTML = '<i class="fas fa-video"></i> ACTIVAR CÁMARA';
+    prevBtn.disabled = false;
+    hideLoading();
+    showToast('Transmisión finalizada', 'info');
+
+  } catch (e) {
+    console.error('Error deteniendo stream:', e);
+    hideLoading();
+    showToast('Error al detener', 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+// WebRTC SIGNALING via Firestore
+// ═══════════════════════════════════════
+function escucharEspectadores() {
+  if (!streamDocRef) return;
+  console.log('[CamMatch] Escuchando espectadores en:', streamDocRef.path + '/connections');
+
+  viewerUnsub = streamDocRef.collection('connections')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        const data = change.doc.data();
+        const viewerId = change.doc.id;
+        console.log('[CamMatch] Conexión:', change.type, 'viewer:', viewerId, 'type:', data.type);
+
+        if ((change.type === 'added' || change.type === 'modified') && data.type === 'offer' && data.offer && !data.answer) {
+          const existingPc = peerConnections[viewerId];
+          const needsConnect = !existingPc || existingPc.connectionState === 'failed' || existingPc.connectionState === 'closed';
+          if (needsConnect) {
+            console.log('[CamMatch] Espectador conectando (' + change.type + '):', viewerId);
+            conectarEspectador(viewerId, data.offer, change.doc.ref);
+          }
+        }
+        if (change.type === 'removed') {
+          if (peerConnections[change.doc.id]) {
+            peerConnections[change.doc.id].close();
+            delete peerConnections[change.doc.id];
+            actualizarViewerCount();
+          }
+        }
+      });
+    }, err => {
+      console.error('[CamMatch] Error escuchando espectadores:', err);
+    });
+}
+
+async function conectarEspectador(viewerId, offer, docRef) {
+  console.log('[CamMatch] conectarEspectador START | viewer:', viewerId);
+  try {
+    if (peerConnections[viewerId]) {
+      peerConnections[viewerId].close();
+      delete peerConnections[viewerId];
+    }
+
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    peerConnections[viewerId] = pc;
+
+    if (!localStream) { console.error('[CamMatch] ❌ localStream es null!'); return; }
+    localStream.getTracks().forEach(track => { pc.addTrack(track, localStream); });
+    console.log('[CamMatch] Tracks agregados:', localStream.getTracks().map(t=>t.kind));
+
+    pc.onconnectionstatechange = () => {
+      console.log('[CamMatch] Espectador', viewerId, 'estado:', pc.connectionState);
+      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        pc.close(); delete peerConnections[viewerId]; actualizarViewerCount();
+      }
+      if (pc.connectionState === 'connected') {
+        console.log('[CamMatch] ✅ Espectador conectado:', viewerId);
+        actualizarViewerCount();
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('[CamMatch] ICE state espectador', viewerId, ':', pc.iceConnectionState);
+    };
+
+    pc.onicecandidate = async (e) => {
+      if (e.candidate) {
+        await docRef.collection('broadcaster_candidates').add({ candidate: e.candidate.toJSON() }).catch(()=>{});
+      }
+    };
+
+    docRef.collection('viewer_candidates').onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          pc.addIceCandidate(new RTCIceCandidate(change.doc.data().candidate)).catch(() => {});
+        }
+      });
+    });
+
+    console.log('[CamMatch] Seteando remote description...');
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    console.log('[CamMatch] Remote description OK ✅');
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    console.log('[CamMatch] Answer creado ✅');
+
+    await docRef.update({ answer: { type: answer.type, sdp: answer.sdp } });
+    console.log('[CamMatch] ✅ Answer enviado a viewer:', viewerId);
+
+  } catch(err) {
+    console.error('[CamMatch] ❌ Error en conectarEspectador:', err.message, err);
+    delete peerConnections[viewerId];
+  }
+}
+
+function escucharViewers() {
+  if (!streamDocRef) return;
+  streamDocRef.onSnapshot(snap => {
+    if (snap.exists) {
+      const v = snap.data().viewers || 0;
+      document.getElementById('viewer-count').textContent = v;
+      document.getElementById('stat-viewers').textContent = v;
+      const vb = document.getElementById('viewer-badge');
+      if (vb) vb.style.display = v > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+function actualizarViewerCount() {
+  const count = Object.values(peerConnections)
+    .filter(pc => pc.connectionState === 'connected').length;
+  if (streamDocRef) {
+    streamDocRef.update({ viewers: count }).catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════
+// MARCADOR EN VIVO
+// ═══════════════════════════════════════
+var _score = { eq1: 0, eq2: 0, nombre1: '', nombre2: '' };
+
+window._scoreChange = function(equipo, delta) {
+    if (equipo === 1) {
+        _score.eq1 = Math.max(0, _score.eq1 + delta);
+        document.getElementById('score-val1').textContent = _score.eq1;
+    } else {
+        _score.eq2 = Math.max(0, _score.eq2 + delta);
+        document.getElementById('score-val2').textContent = _score.eq2;
+    }
+    _scoreGuardar();
+};
+
+window._scoreReset = function() {
+    _score.eq1 = 0;
+    _score.eq2 = 0;
+    document.getElementById('score-val1').textContent = '0';
+    document.getElementById('score-val2').textContent = '0';
+    _scoreGuardar();
+};
+
+function _scoreGuardar() {
+    if (!streamDocRef) return;
+    _score.nombre1 = document.getElementById('score-name1').value || 'Equipo 1';
+    _score.nombre2 = document.getElementById('score-name2').value || 'Equipo 2';
+    streamDocRef.update({ marcador: _score }).catch(function(e) {
+        console.warn('[Score] Error guardando marcador:', e.message);
+    });
+}
+
+function _scoreMostrarPanel(visible) {
+    var panel = document.getElementById('score-panel');
+    if (panel) panel.style.display = visible ? 'block' : 'none';
+}
+
+// Listeners para actualizar nombres en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    var n1 = document.getElementById('score-name1');
+    var n2 = document.getElementById('score-name2');
+    if (n1) n1.addEventListener('input', _scoreGuardar);
+    if (n2) n2.addEventListener('input', _scoreGuardar);
+});
+
+// ═══════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════
+function actualizarTimer() {
+  streamSeconds++;
+  const h = Math.floor(streamSeconds / 3600);
+  const m = Math.floor((streamSeconds % 3600) / 60);
+  const s = streamSeconds % 60;
+  const str = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('stream-timer').textContent = str;
+  document.getElementById('stat-duration').textContent =
+    h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════
+// GRABACIÓN LOCAL
+// ═══════════════════════════════════════
+let _grabMediaRecorder = null;
+let _grabChunks        = [];
+let _grabActiva        = false;
+let _grabNombre        = null;
+
+document.getElementById('btn-grabar').onclick = function() {
+    if (_grabActiva) {
+        _detenerGrabacion();
+    } else {
+        _iniciarGrabacion();
+    }
+};
+
+// ═══════════════════════════════════════
+// MODAL FINAL — Drive / Descargar / Ambos
+// ═══════════════════════════════════════
+
+function _mostrarModalGuardado() {
+    document.getElementById('cm-modal-guardado')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'cm-modal-guardado';
+    modal.innerHTML = `
+        <div id="cm-modal-bg" style="
+            position:fixed;inset:0;z-index:10000;
+            background:rgba(0,0,0,0.75);
+            display:flex;align-items:center;justify-content:center;
+            padding:20px;font-family:'Barlow Condensed',sans-serif;">
+          <div style="
+              background:rgb(8,18,42);border:1.5px solid rgba(255,255,255,0.12);
+              border-radius:20px;padding:28px 24px;width:100%;max-width:380px;
+              box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+            <div style="font-size:1.2rem;font-weight:900;letter-spacing:2px;
+                        color:#fff;margin-bottom:6px;">📹 GRABACIÓN LISTA</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.45);
+                        letter-spacing:1px;margin-bottom:22px;">
+                ¿Dónde querés guardar el video del partido?
+            </div>
+
+            <!-- Opción Drive -->
+            <button id="cm-modal-drive" style="
+                width:100%;padding:14px;border:none;border-radius:12px;
+                background:linear-gradient(135deg,rgba(66,133,244,0.25),rgba(66,133,244,0.15));
+                border:1.5px solid rgba(66,133,244,0.5);
+                color:#fff;font-family:inherit;font-size:14px;font-weight:900;
+                letter-spacing:2px;cursor:pointer;margin-bottom:10px;
+                display:flex;align-items:center;justify-content:center;gap:10px;
+                transition:all .2s;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png"
+                   style="width:18px;height:18px;object-fit:contain;">
+              GUARDAR EN GOOGLE DRIVE
+            </button>
+
+            <!-- Opción Descargar -->
+            <button id="cm-modal-descargar" style="
+                width:100%;padding:14px;border:none;border-radius:12px;
+                background:rgba(79,209,255,0.15);
+                border:1.5px solid rgba(79,209,255,0.4);
+                color:#4fd1ff;font-family:inherit;font-size:14px;font-weight:900;
+                letter-spacing:2px;cursor:pointer;margin-bottom:10px;
+                display:flex;align-items:center;justify-content:center;gap:10px;
+                transition:all .2s;">
+              <i class="fas fa-download"></i> DESCARGAR EN ESTE DISPOSITIVO
+            </button>
+
+            <!-- Opción Ambos -->
+            <button id="cm-modal-ambos" style="
+                width:100%;padding:14px;border:none;border-radius:12px;
+                background:rgba(0,194,122,0.15);
+                border:1.5px solid rgba(0,194,122,0.4);
+                color:#00e5a0;font-family:inherit;font-size:14px;font-weight:900;
+                letter-spacing:2px;cursor:pointer;margin-bottom:18px;
+                display:flex;align-items:center;justify-content:center;gap:10px;
+                transition:all .2s;">
+              <i class="fas fa-check-double"></i> AMBOS
+            </button>
+
+            <button id="cm-modal-cerrar" style="
+                width:100%;padding:10px;border:none;border-radius:10px;
+                background:transparent;border:1px solid rgba(255,255,255,0.1);
+                color:rgba(255,255,255,0.35);font-family:inherit;font-size:12px;
+                letter-spacing:2px;cursor:pointer;">
+              OMITIR
+            </button>
+
+            <!-- Progreso subida Drive -->
+            <div id="cm-drive-progreso" style="display:none;margin-top:16px;">
+              <div style="font-size:12px;color:rgba(255,255,255,0.45);
+                          letter-spacing:1px;margin-bottom:8px;text-align:center;"
+                   id="cm-drive-progreso-txt">Subiendo a Google Drive...</div>
+              <div style="background:rgba(255,255,255,0.08);border-radius:6px;height:6px;overflow:hidden;">
+                <div id="cm-drive-barra" style="height:100%;width:0%;
+                     background:linear-gradient(90deg,#4285f4,#34a853);
+                     transition:width .3s;border-radius:6px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('cm-modal-drive').onclick     = () => _accionGuardado('drive');
+    document.getElementById('cm-modal-descargar').onclick = () => _accionGuardado('local');
+    document.getElementById('cm-modal-ambos').onclick     = () => _accionGuardado('ambos');
+    document.getElementById('cm-modal-cerrar').onclick    = () => modal.remove();
+}
+
+async function _accionGuardado(accion) {
+    if (accion === 'local' || accion === 'ambos') {
+        _ejecutarDescargaLocal();
+    }
+    if (accion === 'drive' || accion === 'ambos') {
+        await _subirADrive();
+    }
+    if (accion === 'local') {
+        document.getElementById('cm-modal-guardado')?.remove();
+    }
+}
+
+function _ejecutarDescargaLocal() {
+    if (!_grabChunks || !_grabChunks.length) { showToast('No hay grabación disponible', 'error'); return; }
+    const tipoBlob = _grabChunks[0]?.type || 'video/mp4';
+    const blob = new Blob(_grabChunks, { type: tipoBlob });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = _grabNombre || 'partido.webm';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    const mb = (blob.size / 1024 / 1024).toFixed(1);
+    showToast('⬇️ Descargando video... (' + mb + ' MB)', 'success');
+}
+
+// Alias para compatibilidad con btn-descargar y el countdown
+function _descargarGrabacion() {
+    if (!_grabChunks || !_grabChunks.length) { showToast('No hay grabación disponible', 'error'); return; }
+    _mostrarModalGuardado();
+}
+
+document.getElementById('btn-descargar').onclick = _descargarGrabacion;
+
+// ═══════════════════════════════════════
+// GOOGLE DRIVE UPLOAD
+// ═══════════════════════════════════════
+
+// ═══════════════════════════════════════
+// GOOGLE DRIVE TOKEN — via Google Identity Services
+// Evita el problema COOP de Firebase popups en Firebase Hosting
+// CLIENT ID: el OAuth Web Client de Google Cloud Console
+// ═══════════════════════════════════════
+const _DRIVE_CLIENT_ID = '657329730386-np0uvh18ssnhacia97s7nhkf8b63mbmj.apps.googleusercontent.com';
+// ⚠️ Reemplazá el valor de arriba con tu Client ID completo de Google Cloud Console
+// Lo encontrás en: APIs y servicios → Credenciales → Web client → ID de cliente
+
+let _gsiTokenClient = null;
+
+function _inicializarGSI() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        setTimeout(_inicializarGSI, 500);
+        return;
+    }
+    _gsiTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: _DRIVE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: () => {}, // se sobreescribe al pedir el token
+    });
+    console.log('[CamMatch] Google Identity Services inicializado ✅');
+}
+_inicializarGSI();
+
+function _obtenerTokenDrive() {
+    return new Promise((resolve, reject) => {
+        // Si ya tenemos token válido, usarlo
+        if (window._driveAccessToken) {
+            resolve(window._driveAccessToken);
+            return;
+        }
+
+        if (!_gsiTokenClient) {
+            reject(new Error('Google Identity Services no está listo. Esperá un momento y reintentá.'));
+            return;
+        }
+
+        _gsiTokenClient.callback = (response) => {
+            if (response.error) {
+                reject(new Error(response.error));
+                return;
+            }
+            window._driveAccessToken = response.access_token;
+            // El token dura 1 hora — limpiarlo antes de que expire
+            setTimeout(() => { window._driveAccessToken = null; }, 55 * 60 * 1000);
+            console.log('[CamMatch] Token Drive obtenido via GSI ✅');
+            resolve(response.access_token);
+        };
+
+        // Pedir token — si ya fue autorizado antes, no muestra pantalla
+        // Si es la primera vez, muestra el popup de Google para pedir permiso
+        _gsiTokenClient.requestAccessToken({
+            hint: currentUser?.email || '',
+        });
+    });
+}
+
+async function _subirADrive() {
+    if (!_grabChunks || !_grabChunks.length) {
+        showToast('No hay grabación disponible', 'error');
+        return;
+    }
+
+    // Mostrar progreso
+    const progDiv = document.getElementById('cm-drive-progreso');
+    const progTxt = document.getElementById('cm-drive-progreso-txt');
+    const progBar = document.getElementById('cm-drive-barra');
+    if (progDiv) progDiv.style.display = 'block';
+    if (progTxt) progTxt.textContent = 'Obteniendo acceso a Google Drive...';
+    if (progBar) progBar.style.width = '5%';
+
+    // Deshabilitar botones del modal
+    ['cm-modal-drive','cm-modal-descargar','cm-modal-ambos','cm-modal-cerrar']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.disabled = true; });
+
+    // Obtener token
+    let token = await _obtenerTokenDrive();
+    if (!token) {
+        if (progTxt) progTxt.textContent = '❌ No se pudo obtener acceso a Google Drive';
+        showToast('❌ No se pudo obtener acceso a Google Drive', 'error');
+        ['cm-modal-drive','cm-modal-descargar','cm-modal-ambos','cm-modal-cerrar']
+            .forEach(id => { const el = document.getElementById(id); if(el) el.disabled = false; });
+        return;
+    }
+
+    // Verificar que el token funcione haciendo una llamada simple
+    try {
+        const testRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        if (testRes.status === 401) {
+            // Token expirado — limpiar y reintentar una vez
+            console.warn('[CamMatch] Token expirado, limpiando y reintentando...');
+            window._driveAccessToken = null;
+            token = await _obtenerTokenDrive();
+            if (!token) throw new Error('No se pudo renovar el token');
+        }
+    } catch(e) {
+        if (progTxt) progTxt.textContent = '❌ Error de autenticación con Drive';
+        showToast('❌ Error de autenticación: ' + e.message, 'error');
+        ['cm-modal-drive','cm-modal-descargar','cm-modal-ambos','cm-modal-cerrar']
+            .forEach(id => { const el = document.getElementById(id); if(el) el.disabled = false; });
+        return;
+    }
+
+    try {
+        // 1. Obtener o crear carpeta PadelMatch
+        if (progTxt) progTxt.textContent = 'Preparando carpeta PadelMatch...';
+        if (progBar) progBar.style.width = '15%';
+        const carpetaRaizId = await _getDriveFolder('PadelMatch', null, token);
+
+        // 2. Subcarpeta con nombre de cancha/profesor
+        const nombreCancha = document.getElementById('stream-name')?.textContent || 'Cancha';
+        if (progTxt) progTxt.textContent = 'Preparando carpeta de cancha...';
+        if (progBar) progBar.style.width = '30%';
+        const carpetaCanchaId = await _getDriveFolder(nombreCancha, carpetaRaizId, token);
+
+        // 3. Subcarpeta con la fecha de hoy
+        const hoy = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+        if (progTxt) progTxt.textContent = 'Preparando carpeta de fecha...';
+        if (progBar) progBar.style.width = '45%';
+        const carpetaFechaId = await _getDriveFolder(hoy, carpetaCanchaId, token);
+
+        // 4. Subir el video
+        if (progTxt) progTxt.textContent = 'Subiendo video...';
+        if (progBar) progBar.style.width = '55%';
+
+        const tipoBlob = _grabChunks[0]?.type || 'video/mp4';
+        const blob = new Blob(_grabChunks, { type: tipoBlob });
+        const nombreArchivo = _grabNombre || 'partido.webm';
+
+        const metadata = {
+            name: nombreArchivo,
+            parents: [carpetaFechaId],
+            mimeType: tipoBlob,
+        };
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', blob);
+
+        const uploadRes = await fetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
+            {
+                method: 'POST',
+                headers: { Authorization: 'Bearer ' + token },
+                body: form,
+            }
+        );
+
+        if (!uploadRes.ok) {
+            const err = await uploadRes.json();
+            throw new Error(err.error?.message || 'Error subiendo a Drive');
+        }
+
+        const fileData = await uploadRes.json();
+        if (progBar) progBar.style.width = '100%';
+        if (progTxt) progTxt.textContent = '✅ ¡Video guardado en Google Drive!';
+
+        console.log('[CamMatch] Video subido a Drive:', fileData.webViewLink);
+
+        setTimeout(() => {
+            document.getElementById('cm-modal-guardado')?.remove();
+            showToast('✅ Guardado en Drive: PadelMatch/' + nombreCancha + '/' + hoy, 'success');
+        }, 1500);
+
+    } catch (err) {
+        console.error('[CamMatch] Error subiendo a Drive:', err);
+        if (progTxt) progTxt.textContent = '❌ Error: ' + err.message;
+        showToast('❌ Error al subir a Drive: ' + err.message, 'error');
+        ['cm-modal-drive','cm-modal-descargar','cm-modal-ambos','cm-modal-cerrar']
+            .forEach(id => { const el = document.getElementById(id); if(el) el.disabled = false; });
+    }
+}
+
+// Busca una carpeta en Drive por nombre y parent; la crea si no existe
+async function _getDriveFolder(nombre, parentId, token) {
+    const q = parentId
+        ? `name='${nombre}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`
+        : `name='${nombre}' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false`;
+
+    const searchRes = await fetch(
+        'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)',
+        { headers: { Authorization: 'Bearer ' + token } }
+    );
+    const searchData = await searchRes.json();
+
+    if (searchData.files && searchData.files.length > 0) {
+        return searchData.files[0].id;
+    }
+
+    // Crear carpeta
+    const body = {
+        name: nombre,
+        mimeType: 'application/vnd.google-apps.folder',
+    };
+    if (parentId) body.parents = [parentId];
+
+    const createRes = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    });
+    const createData = await createRes.json();
+    return createData.id;
+}
+
+// ═══════════════════════════════════════
+// MARCA DE AGUA — Canvas + Logo PadelMatch
+// Para cambiar el logo en el futuro, reemplazá solo la función _dibujarLogo()
+// ═══════════════════════════════════════
+
+let _wmCanvas       = null;  // canvas oculto para grabación
+let _wmCtx          = null;
+let _wmAnimFrame    = null;  // requestAnimationFrame loop
+let _wmStream       = null;  // stream capturado del canvas
+
+// Dibuja el logo "PadelMatch" estilizado en un canvas context dado
+// PARA CAMBIAR EL LOGO: reemplazá este función con una que dibuje tu imagen
+// Ejemplo con imagen: ctx.drawImage(miLogoImg, x, y, ancho, alto)
+function _dibujarLogo(ctx, x, y, ancho, alto) {
+    // Fondo semitransparente redondeado
+    ctx.save();
+    const radio = 6;
+    ctx.beginPath();
+    ctx.moveTo(x + radio, y);
+    ctx.lineTo(x + ancho - radio, y);
+    ctx.quadraticCurveTo(x + ancho, y, x + ancho, y + radio);
+    ctx.lineTo(x + ancho, y + alto - radio);
+    ctx.quadraticCurveTo(x + ancho, y + alto, x + ancho - radio, y + alto);
+    ctx.lineTo(x + radio, y + alto);
+    ctx.quadraticCurveTo(x, y + alto, x, y + alto - radio);
+    ctx.lineTo(x, y + radio);
+    ctx.quadraticCurveTo(x, y, x + radio, y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fill();
+
+    // Punto verde decorativo
+    ctx.beginPath();
+    ctx.arc(x + 12, y + alto / 2, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#00c27a';
+    ctx.fill();
+
+    // Texto "Padel" blanco + "Match" verde
+    const fontSize = Math.round(alto * 0.48);
+    ctx.font = `900 ${fontSize}px Barlow Condensed, Arial Narrow, Arial`;
+    ctx.letterSpacing = '1px';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('Padel', x + 22, y + alto * 0.68);
+    const anchoP = ctx.measureText('Padel').width;
+    ctx.fillStyle = '#00e87a';
+    ctx.fillText('Match', x + 22 + anchoP + 2, y + alto * 0.68);
+    ctx.restore();
+}
+
+// Dibuja el logo en el canvas del overlay en vivo
+function _actualizarLogoLive() {
+    const c = document.getElementById('cm-logo-live');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    _dibujarLogo(ctx, 0, 0, c.width, c.height);
+}
+
+// Inicia el canvas loop que dibuja video + watermark para grabación
+function _iniciarCanvasWatermark() {
+    const video  = document.getElementById('local-video');
+    _wmCanvas    = document.getElementById('cm-watermark-canvas');
+    _wmCtx       = _wmCanvas.getContext('2d');
+
+    // Tamaño según calidad elegida
+    const cal = _CALIDADES_GRAB[_calidadGrab] || _CALIDADES_GRAB.media;
+    _wmCanvas.width  = cal.width;
+    _wmCanvas.height = cal.height;
+
+    // Tamaño del logo en el video: ~18% del ancho, proporcionado
+    const logoAncho = Math.round(cal.width * 0.18);
+    const logoAlto  = Math.round(logoAncho * 0.28);
+    const margen    = Math.round(cal.width * 0.02);
+    const logoX     = cal.width  - logoAncho - margen;
+    const logoY     = cal.height - logoAlto  - margen;
+
+    function _loop() {
+        if (!_wmCtx) return;
+        _wmCtx.drawImage(video, 0, 0, _wmCanvas.width, _wmCanvas.height);
+        _dibujarLogo(_wmCtx, logoX, logoY, logoAncho, logoAlto);
+        _wmAnimFrame = requestAnimationFrame(_loop);
+    }
+    _loop();
+
+    // Capturar stream del canvas (30fps)
+    _wmStream = _wmCanvas.captureStream(30);
+
+    // Agregar el track de audio del stream original
+    if (localStream) {
+        const audioTracks = localStream.getAudioTracks();
+        audioTracks.forEach(t => _wmStream.addTrack(t));
+    }
+}
+
+// Detiene el loop del canvas
+function _detenerCanvasWatermark() {
+    if (_wmAnimFrame) { cancelAnimationFrame(_wmAnimFrame); _wmAnimFrame = null; }
+    _wmStream = null;
+    _wmCanvas = null;
+    _wmCtx    = null;
+}
+
+function _iniciarGrabacion() {
+    if (!localStream) { showToast('No hay stream activo', 'error'); return; }
+
+    const cal = _CALIDADES_GRAB[_calidadGrab] || _CALIDADES_GRAB.media;
+
+    // Iniciar canvas con watermark
+    _iniciarCanvasWatermark();
+
+    // Mostrar logo overlay en el stream en vivo
+    const logoOverlay = document.getElementById('cm-logo-overlay');
+    if (logoOverlay) {
+        logoOverlay.style.display = 'block';
+        _actualizarLogoLive();
+    }
+
+    // Detectar el mejor formato según el dispositivo
+    const _formatos = [
+        'video/mp4;codecs=h264,aac',
+        'video/mp4;codecs=avc1',
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm',
+    ];
+    const mimeType = _formatos.find(f => {
+        try { return MediaRecorder.isTypeSupported(f); } catch(e) { return false; }
+    }) || 'video/webm';
+    const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    console.log('[CamMatch] Formato grabación:', mimeType, '| bitrate:', cal.videoBitsPerSecond, 'bps | calidad:', _calidadGrab);
+
+    // Usar el stream del canvas (con watermark) en vez del stream crudo
+    const streamParaGrabar = _wmStream || localStream;
+
+    try {
+        _grabChunks        = [];
+        _grabMediaRecorder = new MediaRecorder(streamParaGrabar, {
+            mimeType,
+            videoBitsPerSecond: cal.videoBitsPerSecond,
+            audioBitsPerSecond: 128_000,
+        });
+
+        _grabMediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) _grabChunks.push(e.data);
+        };
+
+        _grabMediaRecorder.onstop = async () => {
+            const btnDesc = document.getElementById('btn-descargar');
+            if (btnDesc) {
+                btnDesc.style.display = 'flex';
+                const gc = document.getElementById('grab-controls');
+                if (gc) gc.classList.add('visible');
+            }
+
+            // En modo jugador privado: descarga local automática + sube a Storage
+            if (window._modoJugadorPrivado) {
+                const tipoBlob = _grabChunks[0]?.type || 'video/webm';
+                const blob = new Blob(_grabChunks, { type: tipoBlob });
+
+                // 1. Descarga local automática
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = _grabNombre || 'entrenamiento.webm';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+                showToast('📥 Video guardado en tu dispositivo', 'success');
+
+                // 2. Subir a Firebase Storage
+                try {
+                    const storageRef = storage.ref(
+                        'grabaciones/' + currentUser.uid + '/' + (streamDocRef?.id || Date.now()) + '/' + (_grabNombre || 'video.webm')
+                    );
+                    showToast('☁️ Subiendo a la nube...', 'info');
+                    const uploadTask = storageRef.put(blob, { contentType: tipoBlob });
+                    uploadTask.on('state_changed',
+                        (snap) => {
+                            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                            showToast('☁️ Subiendo... ' + pct + '%', 'info');
+                        },
+                        (err) => { console.warn('[CamMatch] Error subiendo a Storage:', err); },
+                        async () => {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            // Guardar URL en Firestore
+                            if (streamDocRef) {
+                                await streamDocRef.update({ video_url: downloadURL, video_nombre: _grabNombre }).catch(() => {});
+                            }
+                            showToast('✅ Video guardado en la nube', 'success');
+                        }
+                    );
+                } catch(e) {
+                    console.warn('[CamMatch] Storage no disponible:', e.message);
+                }
+                return;
+            }
+
+            // Modo normal: mostrar modal de guardado
+            setTimeout(() => _mostrarModalGuardado(), 600);
+        };
+
+        _grabMediaRecorder.start(5000);
+        _grabActiva = true;
+
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString('es-AR').replace(/\//g, '-');
+        const hora  = ahora.toTimeString().slice(0,5).replace(':', '-');
+        _grabNombre = (window._modoJugadorPrivado ? 'entrenamiento_' : 'clase_') + fecha + '_' + hora + '.' + extension;
+
+        _actualizarBotonGrabar();
+        showToast('⏺ Grabación iniciada', 'success');
+    } catch (err) {
+        console.error('[CamMatch] Error iniciando grabación:', err);
+        showToast('Error al iniciar grabación', 'error');
+    }
+}
+
+function _detenerGrabacion() {
+    if (!_grabMediaRecorder || !_grabActiva) return;
+    _grabMediaRecorder.stop();
+    _grabActiva = false;
+    // Detener canvas watermark
+    _detenerCanvasWatermark();
+    // Ocultar logo overlay en vivo
+    const logoOverlay = document.getElementById('cm-logo-overlay');
+    if (logoOverlay) logoOverlay.style.display = 'none';
+    _actualizarBotonGrabar();
+    showToast('⏹ Grabación detenida', 'success');
+}
+
+function _actualizarBotonGrabar() {
+    const btn = document.getElementById('btn-grabar');
+    if (!btn) return;
+    if (_grabActiva) {
+        btn.style.background      = 'rgba(251,191,36,0.15)';
+        btn.style.borderColor     = 'rgba(251,191,36,0.4)';
+        btn.style.color           = '#fbbf24';
+        btn.innerHTML             = '<span class="rec-dot"></span> DETENER GRABACIÓN';
+    } else {
+        btn.style.background      = 'rgba(0,229,160,0.15)';
+        btn.style.borderColor     = 'rgba(0,229,160,0.3)';
+        btn.style.color           = '#00e5a0';
+        btn.innerHTML             = '<i class="fas fa-circle"></i> GRABAR';
+    }
+}
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function setUILive(isLive) {
+  const btn = document.getElementById('btn-stream');
+  const status = document.getElementById('stream-status');
+  const liveBadge = document.getElementById('live-badge');
+  const timerEl = document.getElementById('stream-timer');
+  const viewerBadge = document.getElementById('viewer-badge');
+
+  if (isLive) {
+    liveBadge.style.display = 'flex';
+    timerEl.style.display = 'block';
+    viewerBadge.style.display = 'flex';
+    btn.className = 'btn-stream stop';
+    btn.innerHTML = '<i class="fas fa-stop-circle"></i> DETENER TRANSMISIÓN';
+    status.textContent = 'EN VIVO';
+    status.className = 'stream-status live';
+    // Mostrar controles de grabación
+    const grabCtrl = document.getElementById('grab-controls');
+    if (grabCtrl) { grabCtrl.classList.add('visible'); }
+  } else {
+    liveBadge.style.display = 'none';
+    timerEl.style.display = 'none';
+    viewerBadge.style.display = 'none';
+    btn.className = 'btn-stream start';
+    btn.innerHTML = '<i class="fas fa-broadcast-tower"></i> INICIAR TRANSMISIÓN';
+    status.textContent = 'INACTIVO';
+    status.className = 'stream-status';
+    document.getElementById('viewer-count').textContent = '0';
+    document.getElementById('stat-viewers').textContent = '0';
+    document.getElementById('stat-duration').textContent = '0:00';
+    document.getElementById('stream-timer').textContent = '00:00:00';
+    // Ocultar controles de grabación
+    const grabCtrl = document.getElementById('grab-controls');
+    if (grabCtrl) grabCtrl.classList.remove('visible');
+    // Detener grabación si estaba activa
+    if (typeof _grabActiva !== 'undefined' && _grabActiva) _detenerGrabacion();
+    // Ocultar countdown y selector de duración
+    const cd = document.getElementById('cm-countdown');
+    if (cd) cd.style.display = 'none';
+    const durSel = document.getElementById('duracion-selector');
+    if (durSel) durSel.style.display = 'none';
+  }
+}
+
+function setCamMode(mode) {
+  camMode = mode;
+  document.getElementById('cam-trasera').classList.toggle('active', mode === 'trasera');
+  document.getElementById('cam-frontal').classList.toggle('active', mode === 'frontal');
+
+  // Si hay stream activo, reiniciar cámara
+  if (localStream) {
+    detenerCamara();
+    iniciarCamara();
+  }
+}
+
+function setQuality(q) {
+  quality = q;
+  ['720','1080','4k'].forEach(v => {
+    document.getElementById('q-' + v).classList.toggle('active', v === q);
+  });
+}
+
+// Flip camera
+document.getElementById('btn-flip').onclick = () => {
+  setCamMode(camMode === 'trasera' ? 'frontal' : 'trasera');
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function showLoading(text) {
+  document.getElementById('loading-text').textContent = text || 'CARGANDO...';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  const icons = { success: '✓', error: '✕', info: 'i' };
+  t.className = 'toast ' + (type || '');
+  t.innerHTML = `<span style="font-size:14px;opacity:0.7;">${icons[type]||'·'}</span> ${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════
+// DURACIÓN PROGRAMADA + CUENTA REGRESIVA
+// ═══════════════════════════════════════
+
+function seleccionarDuracion(minutos) {
+    _duracionMinutos = minutos;
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.min) === minutos);
+    });
+}
+
+function seleccionarCalidadGrab(cal) {
+    _calidadGrab = cal;
+    document.querySelectorAll('[data-cal]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cal === cal);
+    });
+    const info = document.getElementById('grab-cal-info');
+    if (info) info.textContent = _CALIDADES_GRAB[cal].label;
+}
+
+function _iniciarCountdown() {
+    _detenerCountdown(); // limpiar por si hay uno activo
+
+    const cd    = document.getElementById('cm-countdown');
+    const cdVal = document.getElementById('cm-countdown-val');
+
+    if (!_duracionMinutos || _duracionMinutos === 0) {
+        // Sin límite — ocultar cuenta regresiva
+        if (cd) cd.style.display = 'none';
+        return;
+    }
+
+    let segundosRestantes = _duracionMinutos * 60;
+    if (cd) cd.style.display = 'block';
+
+    function _actualizarDisplay() {
+        const m = Math.floor(segundosRestantes / 60);
+        const s = segundosRestantes % 60;
+        if (cdVal) cdVal.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+        // Aviso a los 5 minutos
+        if (segundosRestantes === 300) {
+            showToast('⚠️ Quedan 5 minutos de transmisión', 'info');
+            if (cd) cd.style.borderColor = 'rgba(239,68,68,0.5)';
+            if (cdVal) cdVal.style.color = '#ef4444';
+        }
+        // Aviso al minuto
+        if (segundosRestantes === 60) {
+            showToast('⚠️ Queda 1 minuto de transmisión', 'info');
+        }
+    }
+
+    _actualizarDisplay();
+
+    _countdownInterval = setInterval(async () => {
+        segundosRestantes--;
+        _actualizarDisplay();
+
+        if (segundosRestantes <= 0) {
+            _detenerCountdown();
+            showToast('⏱ Tiempo cumplido — deteniendo transmisión...', 'info');
+            // Detener stream (esto también detiene grabación y dispara el modal automáticamente)
+            await detenerStream();
+        }
+    }, 1000);
+}
+
+function _detenerCountdown() {
+    if (_countdownInterval) {
+        clearInterval(_countdownInterval);
+        _countdownInterval = null;
+    }
+}
+
+// Prevenir cierre accidental si hay stream activo
+window.addEventListener('beforeunload', (e) => {
+  if (localStream) {
+    e.preventDefault();
+    e.returnValue = '¿Seguro? La transmisión se cortará.';
+  }
+});
+
+// ═══════════════════════════════════════
+// BTN ANALIZAR VIDEO — listener robusto
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  var btn   = document.getElementById('btn-analizar-video');
+  var input = document.getElementById('input-video-ia');
+  if (!btn || !input) return;
+
+  var _cargando = false;
+
+  btn.addEventListener('click', function() {
+    if (_cargando) return;
+
+    // Si los módulos IA ya están listos, abrir el file picker directamente
+    if (typeof window.cmIA_analizarVideo === 'function') {
+      _abrirFilePicker();
+      return;
+    }
+
+    // Módulos no cargados — cargarlos primero, luego abrir el picker
+    _cargando = true;
+    var textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> CARGANDO IA...';
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+
+    // cmCargarModulosIA es expuesto por cammatch-modos.js
+    var cargar = typeof window.cmCargarModulosIA === 'function'
+      ? window.cmCargarModulosIA()
+      : Promise.resolve();
+
+    cargar.then(function() {
+      _cargando = false;
+      btn.innerHTML = textoOriginal;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+
+      if (typeof window.cmIA_analizarVideo === 'function') {
+        _abrirFilePicker();
+      } else {
+        showToast('Error cargando módulo de análisis', 'error');
+      }
+    }).catch(function() {
+      _cargando = false;
+      btn.innerHTML = textoOriginal;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+      showToast('Error cargando módulos — revisá tu conexión', 'error');
+    });
+  });
+
+  function _abrirFilePicker() {
+    // Feedback visual
+    btn.style.background  = 'rgba(167,139,250,0.3)';
+    btn.style.borderColor = 'rgba(167,139,250,0.7)';
+    btn.style.transform   = 'scale(0.97)';
+    setTimeout(function() {
+      btn.style.background  = '';
+      btn.style.borderColor = '';
+      btn.style.transform   = '';
+    }, 200);
+
+    input.value = ''; // resetear para que onchange dispare siempre
+    input.click();
+  }
+
+  // Cuando el usuario elige un archivo → analizar
+  input.addEventListener('change', function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (typeof window.cmIA_analizarVideo === 'function') {
+      window.cmIA_analizarVideo(file);
+    } else {
+      // Último intento: esperar un poco más y reintentar
+      showToast('Iniciando analizador...', 'info');
+      var intentos = 0;
+      var retry = setInterval(function() {
+        intentos++;
+        if (typeof window.cmIA_analizarVideo === 'function') {
+          clearInterval(retry);
+          window.cmIA_analizarVideo(file);
+        } else if (intentos >= 10) {
+          clearInterval(retry);
+          showToast('Error: recargá la página e intentá de nuevo', 'error');
+        }
+      }, 500);
+    }
+  });
+});
+
+// ═══════════════════════════════════════
+// NOMBRES DE JUGADORES
+// ═══════════════════════════════════════
+window.cmNombresJugadores = { j1: '', j2: '', j3: '', j4: '', eq1: 'Equipo 1', eq2: 'Equipo 2' };
+
+function _leerNombresJugadores() {
+  var j1 = document.getElementById('cm-nombre-j1')?.value.trim() || 'Jugador 1';
+  var j2 = document.getElementById('cm-nombre-j2')?.value.trim() || 'Jugador 2';
+  var j3 = document.getElementById('cm-nombre-j3')?.value.trim() || 'Jugador 3';
+  var j4 = document.getElementById('cm-nombre-j4')?.value.trim() || 'Jugador 4';
+
+  window.cmNombresJugadores = {
+    j1, j2, j3, j4,
+    eq1: j1 + ' / ' + j2,
+    eq2: j3 + ' / ' + j4,
+  };
+
+  if (typeof window.cmYOLO_setNombres === 'function') {
+    window.cmYOLO_setNombres(window.cmNombresJugadores);
+  }
+  return window.cmNombresJugadores;
+}
+
+// Leer nombres al iniciar stream
+const _origIniciarStream = window.iniciarStream;
+if (typeof _origIniciarStream === 'function') {
+  window.iniciarStream = async function() {
+    _leerNombresJugadores();
+    await _origIniciarStream.apply(this, arguments);
+  };
+}
+
+// ── Config drawer ─────────────────────────────────────────────
+window.abrirConfigDrawer = function() {
+    document.getElementById('config-drawer').classList.add('open');
+    document.getElementById('config-overlay').classList.add('open');
+};
+window.cerrarConfigDrawer = function() {
+    document.getElementById('config-drawer').classList.remove('open');
+    document.getElementById('config-overlay').classList.remove('open');
+};
+// Swipe hacia arriba para cerrar config drawer
+(function() {
+    var d = document.getElementById('config-drawer');
+    if (!d) return;
+    var startY = 0;
+    d.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, { passive: true });
+    d.addEventListener('touchend', function(e) {
+        if (e.changedTouches[0].clientY - startY < -60) window.cerrarConfigDrawer();
+    }, { passive: true });
+})();
+
+// ── Stats drawer ──────────────────────────────────────────────
+window.abrirStatsDrawer = function() {
+    document.getElementById('stats-drawer').classList.add('open');
+    document.getElementById('stats-drawer-overlay').classList.add('open');
+    // Mover paneles de IA al drawer
+    var content = document.getElementById('stats-drawer-content');
+    var panels  = ['cm-ia-panel','cm-yolo-panel','cm-bio-panel'];
+    var found   = false;
+    panels.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && content) { content.appendChild(el); found = true; }
+    });
+    if (!found && content) {
+        content.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.2);font-size:12px;padding:20px 0;">Iniciá la transmisión para ver el análisis</p>';
+    }
+};
+window.cerrarStatsDrawer = function() {
+    document.getElementById('stats-drawer').classList.remove('open');
+    document.getElementById('stats-drawer-overlay').classList.remove('open');
+};
+(function() {
+    var d = document.getElementById('stats-drawer');
+    if (!d) return;
+    var startY = 0;
+    d.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, { passive: true });
+    d.addEventListener('touchend', function(e) {
+        if (e.changedTouches[0].clientY - startY > 60) window.cerrarStatsDrawer();
+    }, { passive: true });
+})();
+
+// ── Score overlay sobre el video ──────────────────────────────
+window.toggleScoreOverlay = function() {
+    var overlay = document.getElementById('cm-score-overlay');
+    if (!overlay) return;
+    overlay.classList.toggle('visible');
+};
+// Cerrar overlay al tocar fuera
+document.addEventListener('click', function(e) {
+    var overlay = document.getElementById('cm-score-overlay');
+    var btn     = document.getElementById('btn-score-toggle');
+    if (!overlay) return;
+    if (!overlay.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+        overlay.classList.remove('visible');
+    }
+});
+
+// ── _scoreMostrarPanel — mantener compatibilidad ──────────────
+// El panel de score ahora es el overlay sobre el video
+var _origScoreMostrarPanel = window._scoreMostrarPanel;
+window._scoreMostrarPanel = function(visible) {
+    // No hacer nada — el overlay se maneja con toggleScoreOverlay
+    // Pero si hay una función original, la llamamos igual
+    if (typeof _origScoreMostrarPanel === 'function') {
+        _origScoreMostrarPanel(visible);
+    }
+};
+
+// ── Cerrar config drawer al tocar fuera en mobile ─────────────
+document.addEventListener('touchstart', function(e) {
+    var drawer  = document.getElementById('config-drawer');
+    var overlay = document.getElementById('config-overlay');
+    if (drawer && overlay && drawer.classList.contains('open')) {
+        if (overlay.contains(e.target)) window.cerrarConfigDrawer();
+    }
+}, { passive: true });
+
+console.log('📡 CamMatch cargado');
+
+// ===== Cartel de MODO DEMO + botón de reinicio (franja superior, para no tapar los
+// controles de transmisión que están abajo de la pantalla) =====
+(function(){
+  var bar = document.createElement('div');
+  bar.setAttribute('style', [
+    'position:fixed','top:0','left:0','right:0','z-index:100000',
+    'background:rgba(0,0,0,0.9)','color:#fff','font-family:Barlow,sans-serif',
+    'display:flex','align-items:center','justify-content:center','gap:10px',
+    'padding:8px 12px','font-size:11.5px','border-bottom:1px solid rgba(0,255,135,0.25)',
+    'flex-wrap:wrap','text-align:center'
+  ].join(';'));
+  bar.innerHTML =
+    '<span><strong style="color:#00ff87">● DEMO</strong> — cuenta y cancha de ejemplo, no conectadas a PadelMatch. La cámara es real pero nadie del otro lado la ve: el contador de espectadores es simulado.</span>' +
+    '<button id="demo-reset-btn" style="background:#00ff87;color:#000;border:none;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:11px;">Reiniciar</button>';
+  document.body.appendChild(bar);
+  document.getElementById('demo-reset-btn').addEventListener('click', function(){ location.reload(); });
+})();
+</script>
+<!-- MODO DEMO: se quitaron los siguientes scripts porque no se subieron junto con el HTML,
+     así que esas funciones no están disponibles en esta demo: comandos de voz
+     (cammatch-voz.js), control remoto desde otro dispositivo (cammatch-comando.js),
+     exportar PDF (cammatch-pdf.js), envío de frames a IA (cammatch-frame-sender.js) y
+     los modos de análisis/IA que carga cammatch-modos.js. El resto de la app (login,
+     selección de cancha, cámara, transmisión y contador de espectadores) funciona igual. -->
+</body>
+</html>

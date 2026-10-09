@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mariano Algañaraz — Sistemas de gestión a medida</title>
+<meta name="description" content="Desarrollo sistemas de gestión a medida — turnos, stock, caja y ventas — para comercios y negocios. Probá una demo real antes de pedir el tuyo." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FAF5EA;
+    --paper-2: #F1E8D3;
+    --ink: #221D17;
+    --ink-soft: #6B6153;
+    --ink-faint: #9A8F7C;
+    --red: #D14425;
+    --red-dark: #A82F16;
+    --gold: #E3A730;
+    --gold-dark: #B27E1A;
+    --teal: #1F6F5C;
+    --line: #DBCFB4;
+    --shadow: 0 1px 2px rgba(34,29,23,0.06), 0 10px 30px rgba(34,29,23,0.08);
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Work Sans',sans-serif; -webkit-font-smoothing:antialiased;
+    font-size:16px; line-height:1.5;
+  }
+  h1,h2,h3{ margin:0; }
+  p{ margin:0; }
+  a{ color:inherit; }
+  .display{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:0.01em; font-weight:400; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  img{ max-width:100%; display:block; }
+  button{ font-family:inherit; cursor:pointer; }
+  ::selection{ background:var(--red); color:#fff; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- reveal on scroll ---------- */
+  .reveal{ opacity:0; transform:translateY(16px); transition:opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:50; background:rgba(250,245,234,0.92); backdrop-filter:blur(6px);
+    border-bottom:1px dashed var(--line);
+  }
+  .header-inner{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1120px; margin:0 auto; }
+  .brand{ display:flex; flex-direction:column; line-height:1.1; }
+  .brand .name{ font-family:'Anton',sans-serif; font-size:19px; letter-spacing:0.02em; }
+  .brand .tag{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-soft); letter-spacing:0.08em; margin-top:2px; }
+  nav{ display:flex; align-items:center; gap:28px; }
+  nav a{ text-decoration:none; font-size:13.5px; font-weight:600; color:var(--ink-soft); }
+  nav a:hover{ color:var(--ink); }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:3px; border:none;
+    font-weight:700; font-size:13.5px; text-decoration:none; cursor:pointer; letter-spacing:0.01em;
+  }
+  .btn-primary{ background:var(--red); color:#fff; box-shadow:0 4px 0 var(--red-dark); transition:transform 0.12s ease, box-shadow 0.12s ease; }
+  .btn-primary:hover{ transform:translateY(2px); box-shadow:0 2px 0 var(--red-dark); }
+  .btn-ghost{ background:transparent; color:var(--ink); border:1.5px solid var(--ink); }
+  .btn-ghost:hover{ background:var(--ink); color:var(--paper); }
+  .nav-cta{ display:none; }
+  @media(min-width:860px){ .nav-cta{ display:inline-flex; } }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:76px 0 60px; position:relative; overflow:hidden; }
+  .hero-grid{ display:grid; grid-template-columns:1fr; gap:40px; align-items:center; }
+  @media(min-width:920px){ .hero-grid{ grid-template-columns:1.15fr 0.85fr; gap:20px; } }
+  .stamp{
+    display:inline-flex; align-items:center; gap:8px; border:2px dashed var(--red); color:var(--red-dark);
+    border-radius:999px; padding:7px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+    letter-spacing:0.06em; transform:rotate(-2deg); margin-bottom:22px;
+  }
+  .hero h1{ font-size:clamp(40px,7vw,68px); line-height:0.98; margin-bottom:22px; }
+  .hero h1 .accent{ color:var(--red); }
+  .hero-sub{ font-size:17px; color:var(--ink-soft); max-width:480px; margin-bottom:30px; line-height:1.55; }
+  .hero-ctas{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
+  .hero-note{ font-size:12.5px; color:var(--ink-faint); margin-top:14px; }
+
+  /* decorative receipt on the right */
+  .receipt{
+    background:#fff; border-radius:2px; box-shadow:var(--shadow); padding:26px 24px 34px; max-width:320px;
+    margin:0 auto; position:relative; transform:rotate(2deg);
+  }
+  .receipt::before, .receipt::after{
+    content:""; position:absolute; left:0; right:0; height:12px;
+    background-image: radial-gradient(circle at 10px 0, transparent 7px, #fff 7.5px);
+    background-size:20px 12px; background-repeat:repeat-x;
+  }
+  .receipt::before{ top:-1px; }
+  .receipt::after{ bottom:-1px; transform:rotate(180deg); }
+  .receipt .rline{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:12px; padding:6px 0; border-bottom:1px dashed var(--line); color:var(--ink-soft); }
+  .receipt .rline b{ color:var(--ink); font-weight:600; }
+  .receipt .rtitle{ font-family:'Anton',sans-serif; font-size:15px; text-align:center; margin-bottom:14px; letter-spacing:0.03em; }
+  .receipt .rtotal{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:13.5px; font-weight:700; padding-top:12px; margin-top:4px; }
+  .receipt .rfoot{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink-faint); margin-top:16px; letter-spacing:0.04em; }
+
+  /* ---------- section shells ---------- */
+  section{ padding:70px 0; }
+  .section-alt{ background:var(--paper-2); }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--red-dark); letter-spacing:0.08em; margin-bottom:10px; }
+  .section-title{ font-size:clamp(28px,4.2vw,42px); margin-bottom:14px; }
+  .section-desc{ font-size:15.5px; color:var(--ink-soft); max-width:560px; margin-bottom:44px; line-height:1.6; }
+
+  /* ---------- rubro ticket cards ---------- */
+  .rubros-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px; }
+  .ticket{
+    position:relative; background:#fff; border-radius:2px; box-shadow:var(--shadow); padding:26px 24px 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .ticket::before, .ticket::after{
+    content:""; position:absolute; left:0; right:0; height:12px;
+    background-image: radial-gradient(circle at 10px 0, transparent 7px, var(--paper) 7.5px);
+    background-size:20px 12px; background-repeat:repeat-x;
+  }
+  .section-alt .ticket::before, .section-alt .ticket::after{
+    background-image: radial-gradient(circle at 10px 0, transparent 7px, var(--paper-2) 7.5px);
+  }
+  .ticket::before{ top:-1px; }
+  .ticket::after{ bottom:-1px; transform:rotate(180deg); }
+  .ticket.muted{ opacity:0.55; }
+  .ticket-icon{ width:38px; height:38px; color:var(--red); }
+  .ticket.muted .ticket-icon{ color:var(--ink-faint); }
+  .ticket-kicker{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-faint); letter-spacing:0.08em; }
+  .ticket h3{ font-family:'Anton',sans-serif; font-size:20px; letter-spacing:0.01em; }
+  .ticket p{ font-size:13.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
+  .ticket-actions{ display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .ticket-link{
+    display:flex; align-items:center; justify-content:space-between; text-decoration:none; font-size:13px; font-weight:700;
+    color:var(--ink); border:1.5px solid var(--ink); border-radius:3px; padding:9px 12px;
+    transition:background 0.12s ease, color 0.12s ease;
+  }
+  .ticket-link:hover{ background:var(--ink); color:var(--paper); }
+  .ticket-link.secondary{ border-color:var(--line); color:var(--ink-soft); font-weight:600; }
+  .ticket-link.secondary:hover{ background:var(--ink-soft); color:#fff; border-color:var(--ink-soft); }
+  .badge-soon{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--ink-faint); border:1.5px dashed var(--ink-faint); border-radius:999px; padding:6px 12px; text-align:center; letter-spacing:0.05em; }
+
+  /* ---------- how it works ---------- */
+  .steps{ display:grid; grid-template-columns:1fr; gap:0; }
+  @media(min-width:760px){ .steps{ grid-template-columns:repeat(3,1fr); gap:28px; } }
+  .step{ padding:22px 0; border-bottom:1px dashed var(--line); }
+  @media(min-width:760px){ .step{ border-bottom:none; border-top:3px solid var(--ink); padding:20px 4px 0; } }
+  .step-num{ font-family:'Anton',sans-serif; font-size:15px; color:var(--red); margin-bottom:10px; }
+  .step h3{ font-size:18px; font-weight:700; margin-bottom:8px; }
+  .step p{ font-size:13.5px; color:var(--ink-soft); line-height:1.55; }
+
+  /* ---------- includes receipt ---------- */
+  .includes{ display:grid; grid-template-columns:1fr; gap:40px; align-items:start; }
+  @media(min-width:900px){ .includes{ grid-template-columns:1fr 1fr; } }
+  .includes-list{ display:flex; flex-direction:column; }
+  .item-line{ display:flex; align-items:baseline; gap:10px; padding:13px 0; border-bottom:1px dashed var(--line); }
+  .item-check{ color:var(--teal); font-weight:800; flex-shrink:0; }
+  .item-line span:nth-child(2){ font-weight:600; font-size:14.5px; }
+  .item-line .fill{ flex:1; border-bottom:1px dotted var(--ink-faint); transform:translateY(-4px); min-width:16px; }
+  .item-line .incl{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-faint); }
+  .includes-receipt{ background:#fff; box-shadow:var(--shadow); border-radius:2px; padding:30px 26px; position:relative; }
+  .includes-receipt::before, .includes-receipt::after{
+    content:""; position:absolute; left:0; right:0; height:12px;
+    background-image: radial-gradient(circle at 10px 0, transparent 7px, var(--paper-2) 7.5px);
+    background-size:20px 12px; background-repeat:repeat-x;
+  }
+  .includes-receipt::before{ top:-1px; }
+  .includes-receipt::after{ bottom:-1px; transform:rotate(180deg); }
+  .includes-receipt h3{ font-family:'Anton',sans-serif; font-size:20px; margin-bottom:14px; }
+  .includes-receipt p{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-bottom:16px; }
+  .includes-total{ display:flex; justify-content:space-between; align-items:center; border-top:2px solid var(--ink); padding-top:14px; margin-top:6px; }
+  .includes-total .label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); letter-spacing:0.06em; }
+  .includes-total .value{ font-family:'Anton',sans-serif; font-size:16px; color:var(--red-dark); }
+
+  /* ---------- contact ---------- */
+  .contact{ background:var(--ink); color:var(--paper); border-radius:4px; padding:56px 40px; text-align:center; position:relative; overflow:hidden; }
+  .contact::before{ content:""; position:absolute; inset:0; background:repeating-linear-gradient(135deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 22px); }
+  .contact-inner{ position:relative; }
+  .contact .eyebrow{ color:var(--gold); }
+  .contact h2{ font-family:'Anton',sans-serif; font-size:clamp(28px,5vw,46px); margin-bottom:16px; }
+  .contact p{ font-size:15.5px; color:#D9D2C3; max-width:480px; margin:0 auto 30px; line-height:1.6; }
+  .contact-ctas{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; }
+  .contact .btn-primary{ box-shadow:0 4px 0 var(--red-dark); }
+  .btn-outline{ background:transparent; border:1.5px solid rgba(250,245,234,0.4); color:var(--paper); }
+  .btn-outline:hover{ background:rgba(250,245,234,0.1); }
+
+  footer{ padding:34px 0 40px; text-align:center; }
+  footer .mono{ font-size:11px; color:var(--ink-faint); letter-spacing:0.04em; }
+
+  svg{ display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <span class="name">M. ALGAÑARAZ</span>
+      <span class="tag">SISTEMAS DE GESTIÓN A MEDIDA</span>
+    </div>
+    <nav>
+      <a href="#rubros">Rubros</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#incluye">Qué incluye</a>
+      <a href="#contacto" class="btn btn-primary nav-cta">Escribime</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="stamp">☞ PROBÁ LA DEMO ANTES DE PEDIRLO</span>
+      <h1 class="display">TU NEGOCIO<br>TIENE SU PROPIO<br><span class="accent">SISTEMA</span></h1>
+      <p class="hero-sub">Desarrollo sistemas de gestión a medida — turnos, stock, caja y ventas — para comercios como el tuyo. Nada de plantillas armadas: cada sistema se construye para cómo trabajás vos, no al revés.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#rubros">Probar una demo</a>
+        <a class="btn btn-ghost" href="#contacto">Hablar con Mariano</a>
+      </div>
+      <p class="hero-note">Sin registro, sin compromiso — las demos usan datos de ejemplo.</p>
+    </div>
+    <div>
+      <div class="receipt">
+        <div class="rtitle">TICKET DEL SISTEMA</div>
+        <div class="rline"><span>Turnos y agenda</span><b>✓</b></div>
+        <div class="rline"><span>Stock y alertas</span><b>✓</b></div>
+        <div class="rline"><span>Caja y ventas</span><b>✓</b></div>
+        <div class="rline"><span>Clientes y CC</span><b>✓</b></div>
+        <div class="rline"><span>Multisucursal</span><b>✓</b></div>
+        <div class="rtotal"><span>A TU MEDIDA</span><span>100%</span></div>
+        <div class="rfoot">SIN PLANTILLAS · SIN VUELTO</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rubros">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">RUBROS</div>
+      <h2 class="section-title">Elegí tu rubro y probalo</h2>
+      <p class="section-desc">Cada sistema es distinto porque cada negocio lo es. Estos son casos reales que ya desarrollé — entrá y probá el sistema tal como lo usaría tu negocio.</p>
+    </div>
+
+    <div class="rubros-grid">
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 6v13a1 1 0 001 1h16a1 1 0 001-1V6M8 10h8M8 14h5"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/></svg>
+        <div>
+          <div class="ticket-kicker">PUNTO DE VENTA · CUALQUIER RUBRO</div>
+          <h3>FastPOS</h3>
+        </div>
+        <p>Sistema de punto de venta con stock, caja, facturación, cuenta corriente y roles con PIN por empleado (admin, ventas, depósito, contable). Pensado para cualquier comercio.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="fastpos-demo.html" target="_blank" rel="noopener">Probar demo →</a>
+        </div>
+      </div>
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l1.5-4h13L20 8"/><path d="M4 8h16l-1 12H5z"/><path d="M9 12v3M15 12v3"/></svg>
+        <div>
+          <div class="ticket-kicker">ALMACÉN · COTILLÓN</div>
+          <h3>Cotillón Express</h3>
+        </div>
+        <p>Stock con vencimientos y alertas, caja con varios métodos de pago, proveedores y facturas de compra leídas con IA, cuenta corriente de clientes.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="cotillon-express-demo.html" target="_blank" rel="noopener">Probar sistema de gestión →</a>
+          <a class="ticket-link secondary" href="cotillon-express-tienda-demo.html" target="_blank" rel="noopener">Ver la tienda online →</a>
+        </div>
+      </div>
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13v6a4 4 0 01-4 4H8a4 4 0 01-4-4z"/><path d="M17 10h2a2 2 0 010 4h-2"/><path d="M8 4c0 1.2-1 1.3-1 2.5S8 8 8 8M12 4c0 1.2-1 1.3-1 2.5S12 8 12 8"/></svg>
+        <div>
+          <div class="ticket-kicker">CAFETERÍA · PANADERÍA</div>
+          <h3>Mi Comercio</h3>
+        </div>
+        <p>Pedidos por mesa en cafetería, caja unificada para varias estaciones de venta, control de stock y ventas multisucursal.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="mi-comercio-demo.html" target="_blank" rel="noopener">Probar demo →</a>
+        </div>
+      </div>
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M8 5l1.5 2.5M16 5l-1.5 2.5M5 12H3M21 12h-2M6 20h12l-1-8H7z"/></svg>
+        <div>
+          <div class="ticket-kicker">CENTRO DE ESTÉTICA</div>
+          <h3>Bitácora</h3>
+        </div>
+        <p>Turnos por profesional, servicios, clientas, stock y caja para un centro de estética.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="bitacora-estetica-demo.html" target="_blank" rel="noopener">Probar demo →</a>
+        </div>
+      </div>
+
+      <div class="ticket muted reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M4 9l3-3M17 20l3-3M2 12l2-2 2 2-2 2zM18 8l2-2 2 2-2 2z"/></svg>
+        <div>
+          <div class="ticket-kicker">GIMNASIO</div>
+          <h3>Gestión de socios</h3>
+        </div>
+        <p>Socios, cuotas, clases y check-in para un gimnasio.</p>
+        <div class="ticket-actions"><span class="badge-soon">Demo en camino</span></div>
+      </div>
+
+      <div class="ticket muted reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 4h3v4l-4 1v9H8v-9l-4-1V7h3z"/><path d="M12 12v5M9.5 14.5h5"/></svg>
+        <div>
+          <div class="ticket-kicker">CLÍNICA MÉDICA</div>
+          <h3>Turnos y pacientes</h3>
+        </div>
+        <p>Turnos por especialidad, pacientes, historia clínica y obra social.</p>
+        <div class="ticket-actions"><span class="badge-soon">Demo en camino</span></div>
+      </div>
+
+      <div class="ticket muted reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v10a2 2 0 002 2h1v6M9 3v7M6 3v7M12 3v18M17 3c-2 2-2 4 0 6s2 4 0 6v6"/></svg>
+        <div>
+          <div class="ticket-kicker">RESTAURANTE</div>
+          <h3>Carta digital y delivery</h3>
+        </div>
+        <p>Toma de pedidos, delivery, stock, caja y empleados para un restaurante.</p>
+        <div class="ticket-actions"><span class="badge-soon">Demo en camino</span></div>
+      </div>
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a13 13 0 000 18M12 3a13 13 0 010 18M3 12h18M4.5 7.5h15M4.5 16.5h15"/></svg>
+        <div>
+          <div class="ticket-kicker">COMUNIDAD DE PÁDEL · APP PROPIA</div>
+          <h3>PadelMatch</h3>
+        </div>
+        <p>Red social y de reservas para jugadores de pádel: buscá partido, reservá cancha, armá convocatorias, torneos y ranking. Un producto propio, no un encargo — ya está en vivo con usuarios reales.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="https://padelmatch-2869c.web.app" target="_blank" rel="noopener">Ver la app en vivo →</a>
+        </div>
+      </div>
+
+      <div class="ticket reveal">
+        <svg class="ticket-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8l5-3v14l-5-3M3 6h11a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1z"/></svg>
+        <div>
+          <div class="ticket-kicker">CLUBES DE PÁDEL</div>
+          <h3>CamMatch</h3>
+        </div>
+        <p>Transmisión en vivo por cámara de los partidos, para que jugadores y familiares sigan el partido desde PadelMatch.</p>
+        <div class="ticket-actions">
+          <a class="ticket-link" href="cammatch-demo.html" target="_blank" rel="noopener">Probar demo →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+<section id="como-funciona" class="section-alt">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">CÓMO FUNCIONA</div>
+      <h2 class="section-title">De tu negocio a tu sistema</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num display">01</div>
+        <h3>Me contás cómo trabajás hoy</h3>
+        <p>Turnos, stock, caja — en papel, en Excel o en otro sistema que ya no te sirve. Vemos qué necesita tu negocio de verdad.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num display">02</div>
+        <h3>Armo el sistema, módulo por módulo</h3>
+        <p>Arrancamos por lo esencial y vamos sumando lo que haga falta, sin pagar de más por cosas que no vas a usar.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num display">03</div>
+        <h3>Lo probás y lo usás todos los días</h3>
+        <p>Ajustes y cambios incluidos mientras lo vas usando. El sistema se termina de afinar con el uso real.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="incluye">
+  <div class="wrap">
+    <div class="reveal" style="margin-bottom:44px;">
+      <div class="eyebrow">QUÉ INCLUYE</div>
+      <h2 class="section-title">Lo que trae cualquier sistema</h2>
+    </div>
+    <div class="includes">
+      <div class="includes-list reveal">
+        <div class="item-line"><span class="item-check">✓</span><span>Sistema web</span><span class="fill"></span><span class="incl">cualquier celular o PC</span></div>
+        <div class="item-line"><span class="item-check">✓</span><span>Base de datos en la nube</span><span class="fill"></span><span class="incl">tus datos a salvo</span></div>
+        <div class="item-line"><span class="item-check">✓</span><span>Módulos a medida</span><span class="fill"></span><span class="incl">turnos, stock, caja...</span></div>
+        <div class="item-line"><span class="item-check">✓</span><span>Multisucursal</span><span class="fill"></span><span class="incl">si tenés más de un local</span></div>
+        <div class="item-line"><span class="item-check">✓</span><span>Funciona sin conexión</span><span class="fill"></span><span class="incl">y sincroniza solo</span></div>
+        <div class="item-line"><span class="item-check">✓</span><span>Ajustes post-entrega</span><span class="fill"></span><span class="incl">incluidos</span></div>
+      </div>
+      <div class="includes-receipt reveal">
+        <h3>Sin plantillas</h3>
+        <p>No vendo un sistema hecho que le queda grande o chico a tu negocio. Cada módulo se construye para lo que vos realmente necesitás — si tu negocio no usa cuenta corriente, el sistema no la tiene.</p>
+        <p>Y si mañana tu negocio cambia, el sistema cambia con vos.</p>
+        <div class="includes-total">
+          <span class="label">TOTAL</span>
+          <span class="value">SISTEMA COMPLETO, A TU MEDIDA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contacto">
+  <div class="wrap">
+    <div class="contact reveal">
+      <div class="contact-inner">
+        <div class="eyebrow">CONTACTO</div>
+        <h2>Hablemos de tu negocio</h2>
+        <p>Contame qué hace tu negocio hoy y en qué te gustaría que te ayude un sistema propio. Sin costo por la primera charla.</p>
+        <div class="contact-ctas">
+          <a class="btn btn-primary" href="https://wa.me/5492612090061" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+          <a class="btn btn-outline" href="mailto:marianoalganaraz9@gmail.com">marianoalganaraz9@gmail.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="mono">MARIANO ALGAÑARAZ — SISTEMAS DE GESTIÓN A MEDIDA</span>
+</footer>
+
+<script>
+  var els = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold:0.12 });
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+</script>
+
+</body>
+</html>
